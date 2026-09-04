@@ -1,0 +1,151 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+
+    /* Brand palette */
+    --color-primary:   #0A3D7A;
+    --color-secondary: #1E6FBF;
+    --color-action:    #1a56c4;
+    --color-surface:   #F8FAFC;
+    --color-success:   #1FA855;
+    --color-whatsapp:  #25D366;
+    --color-danger:    #DC2626;
+    --color-warning:   #F59E0B;
+
+    /* Shadows */
+    --shadow-card: 0 2px 8px rgba(10,30,60,0.08);
+    --shadow-card-hover: 0 8px 24px rgba(10,30,60,0.14);
+
+    /* Radius */
+    --radius-card: 12px;
+    --radius-btn:  8px;
+}
+
+@layer base {
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1a1a2e; }
+    h1,h2,h3,h4,h5,h6 { font-family: 'Poppins', sans-serif; }
+}
+
+@layer components {
+    /* Buttons */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white rounded-lg transition-all duration-200;
+        background-color: #1a56c4;
+        border-radius: 8px;
+    }
+    .btn-primary:hover { background-color: #0A3D7A; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,86,196,0.35); }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-lg border-2 transition-all duration-200;
+        border-color: #1a56c4; color: #1a56c4; border-radius: 8px;
+    }
+    .btn-outline:hover { background-color: #1a56c4; color: white; }
+
+    .btn-whatsapp {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white rounded-lg transition-all duration-200;
+        background-color: #25D366; border-radius: 8px;
+    }
+    .btn-whatsapp:hover { background-color: #128C7E; }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-all;
+        background-color: #DC2626; border-radius: 8px;
+    }
+
+    /* Cards */
+    .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(10,30,60,0.08);
+        overflow: hidden;
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .card:hover { box-shadow: 0 8px 24px rgba(10,30,60,0.14); transform: translateY(-2px); }
+
+    /* Badge */
+    .badge { @apply inline-block px-2 py-0.5 text-xs font-bold rounded-full; }
+    .badge-blue   { background: #1a56c4; color: white; }
+    .badge-green  { background: #1FA855; color: white; }
+    .badge-red    { background: #DC2626; color: white; }
+    .badge-orange { background: #F59E0B; color: white; }
+    .badge-purple { background: #7C3AED; color: white; }
+    .badge-gray   { background: #6B7280; color: white; }
+
+    /* Nav link */
+    .nav-link {
+        @apply relative text-sm font-semibold text-white/90 hover:text-white transition-colors duration-150 py-1;
+    }
+    .nav-link::after {
+        content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px;
+        background: white; transition: width 0.2s;
+    }
+    .nav-link:hover::after { width: 100%; }
+
+    /* Section title */
+    .section-title { font-family: 'Poppins', sans-serif; font-weight: 700; color: #0A3D7A; }
+
+    /* Star rating */
+    .stars { color: #F59E0B; font-size: 0.85rem; letter-spacing: 1px; }
+
+    /* Input */
+    .form-input {
+        @apply w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none transition-all;
+        border-radius: 8px;
+    }
+    .form-input:focus { border-color: #1a56c4; box-shadow: 0 0 0 3px rgba(26,86,196,0.12); }
+
+    /* Step indicator */
+    .step-active   { background: #1a56c4; color: white; }
+    .step-done     { background: #1FA855; color: white; }
+    .step-inactive { background: #E5E7EB; color: #6B7280; }
+}
+
+/* WhatsApp floating button */
+#wa-float {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #25D366; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.45);
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: wa-pulse 2.5s infinite;
+}
+#wa-float:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(37,211,102,0.6); }
+@keyframes wa-pulse {
+    0%,100% { box-shadow: 0 4px 16px rgba(37,211,102,0.45); }
+    50%      { box-shadow: 0 4px 24px rgba(37,211,102,0.7); }
+}
+
+/* Cart badge animation */
+.cart-badge { animation: badge-pop 0.3s cubic-bezier(0.68,-0.55,0.27,1.55); }
+@keyframes badge-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+/* Checkmark animation (confirmation page) */
+.check-animate { animation: check-draw 0.6s ease forwards; }
+@keyframes check-draw {
+    0%   { stroke-dashoffset: 60; opacity: 0; }
+    100% { stroke-dashoffset: 0;  opacity: 1; }
+}
+.circle-animate { animation: circle-draw 0.5s ease forwards; }
+@keyframes circle-draw {
+    0%   { stroke-dashoffset: 200; }
+    100% { stroke-dashoffset: 0; }
+}
+
+/* Skeleton loading */
+.skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e8f0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Alpine x-cloak — hide until Alpine initializes */
+[x-cloak] { display: none !important; }
+
+/* Cart drawer — body scroll lock when open */
+body.cart-open { overflow: hidden; }
+
+/* Prevent Dark Reader and forced dark mode from altering colors */
+:root { color-scheme: light only; }
