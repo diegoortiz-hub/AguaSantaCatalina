@@ -9,14 +9,18 @@ Alpine.store('cart', {
     sessionId: Alpine.$persist('').as('cart_session'),
     open: false,
 
-    // Coupon state (UI-only; real validation happens at checkout)
+    // Cupón validado contra /api/coupons/validate. Se guarda tipo + valor en vez
+    // del monto ya calculado, para que el descuento siga el subtotal cuando el
+    // usuario cambia cantidades con el cupón aplicado.
     couponCode:     '',
-    couponDiscount: 0,   // 0.10 = 10 %
+    couponTipo:     null,   // 'porcentaje' | 'monto'
+    couponRate:     0,      // fracción, si es porcentaje
+    couponFlat:     0,      // CLP, si es monto fijo
     couponMessage:  '',
     couponSuccess:  false,
 
-    FREE_SHIPPING: 15000,
-    SHIPPING_COST: 2500,
+    FREE_SHIPPING: window.TIENDA?.despacho?.gratis_desde ?? 15000,
+    SHIPPING_COST: window.TIENDA?.despacho?.estandar ?? 2500,
 
     init() {
         if (!this.sessionId) {
@@ -38,7 +42,14 @@ Alpine.store('cart', {
     },
 
     get discountAmount() {
-        return Math.round(this.subtotal * this.couponDiscount);
+        if (!this.couponSuccess) return 0;
+        if (this.couponTipo === 'porcentaje') return Math.round(this.subtotal * this.couponRate);
+        return Math.min(this.couponFlat, this.subtotal);
+    },
+
+    // Alias usado por las vistas para saber si hay descuento activo.
+    get couponDiscount() {
+        return this.discountAmount;
     },
 
     get total() {
@@ -72,7 +83,7 @@ Alpine.store('cart', {
                     this.items.push({ id: productId, name: productName, price, quantity });
                 }
                 this.open = true;
-                this.showToast(`✓ "${productName}" agregado al carrito`);
+                this.showToast(`"${productName}" agregado al carrito`);
             }
         } catch (e) {
             console.error('Cart error:', e);
@@ -101,30 +112,51 @@ Alpine.store('cart', {
         this.items = this.items.filter(i => i.id !== productId);
     },
 
-    applyCoupon() {
-        const CODES = {
-            'PURASALUD10':   0.10,
-            'BIENVENIDO':    0.10,
-            'SANTACATALINA': 0.10,
-            'AGUA15':        0.15,
-        };
+    async applyCoupon() {
         const code = this.couponCode.trim().toUpperCase();
-        if (CODES[code] !== undefined) {
-            this.couponDiscount = CODES[code];
-            this.couponSuccess  = true;
-            this.couponMessage  = `¡Cupón aplicado! ${CODES[code] * 100}% de descuento`;
-        } else {
-            this.couponDiscount = 0;
-            this.couponSuccess  = false;
-            this.couponMessage  = 'Cupón no válido. Prueba con PURASALUD10';
+        if (!code) return;
+
+        try {
+            const res = await fetch('/api/coupons/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ codigo: code, subtotal: this.subtotal }),
+            });
+            const data = await res.json();
+
+            if (data.valido) {
+                this.couponSuccess = true;
+                this.couponTipo    = data.tipo;
+                this.couponRate    = data.tipo === 'porcentaje' && this.subtotal > 0
+                    ? data.descuento / this.subtotal
+                    : 0;
+                this.couponFlat    = data.tipo === 'monto' ? data.descuento : 0;
+                this.couponMessage = data.message;
+            } else {
+                this.resetCouponState();
+                this.couponMessage = data.message || 'Cupón no válido.';
+            }
+        } catch (e) {
+            this.resetCouponState();
+            this.couponMessage = 'No pudimos validar el cupón. Revisa tu conexión.';
         }
     },
 
+    resetCouponState() {
+        this.couponSuccess = false;
+        this.couponTipo    = null;
+        this.couponRate    = 0;
+        this.couponFlat    = 0;
+    },
+
     removeCoupon() {
-        this.couponCode     = '';
-        this.couponDiscount = 0;
-        this.couponMessage  = '';
-        this.couponSuccess  = false;
+        this.couponCode    = '';
+        this.couponMessage = '';
+        this.resetCouponState();
     },
 
     orderViaWhatsApp() {
@@ -132,8 +164,8 @@ Alpine.store('cart', {
         const lines = this.items
             .map(i => `• ${i.quantity}x ${i.name} ($${(i.price * i.quantity).toLocaleString('es-CL')})`)
             .join('\n');
-        const msg = `💧 *Nuevo Pedido - Aguas Santa Catalina*\n\nHola! Quiero pedir:\n\n${lines}\n\n*Total estimado:* $${this.total.toLocaleString('es-CL')}\n\n¡Gracias!`;
-        window.open(`https://wa.me/56991493272?text=${encodeURIComponent(msg)}`, '_blank');
+        const msg = `*Nuevo Pedido - Aguas Santa Catalina*\n\nHola! Quiero pedir:\n\n${lines}\n\n*Total estimado:* $${this.total.toLocaleString('es-CL')}\n\n¡Gracias!`;
+        window.open(`https://wa.me/${window.TIENDA.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
     },
 
     async sync() {

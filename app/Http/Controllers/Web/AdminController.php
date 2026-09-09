@@ -379,54 +379,31 @@ class AdminController extends Controller
 
     // ── Configuración ──────────────────────────────────────────────────────
 
-    private function settingsPath(): string
+    public function configuracion(\App\Support\Settings $ajustes): View
     {
-        return storage_path('app/settings.json');
-    }
-
-    private function loadSettings(): array
-    {
-        if (file_exists($this->settingsPath())) {
-            return json_decode(file_get_contents($this->settingsPath()), true) ?? [];
-        }
-        return [
-            'empresa'        => 'Aguas Purificadas Santa Catalina',
-            'rut'            => '76.000.000-0',
-            'email'          => 'contacto@aguassantacatalina.cl',
-            'telefono'       => '+56 9 9149 3272',
-            'direccion'      => 'Av. Purificación 1234',
-            'comuna'         => 'Santiago',
-            'ciudad'         => 'Santiago',
-            'horario'        => 'Lun–Sáb 08:00–18:00',
-            'banco'          => 'Banco Estado',
-            'tipo_cuenta'    => 'Cuenta Corriente',
-            'nro_cuenta'     => '000000000',
-            'titular'        => 'Aguas Purificadas Santa Catalina',
-            'rut_titular'    => '76.000.000-0',
-            'email_pagos'    => 'pagos@aguassantacatalina.cl',
-            'whatsapp'       => '+56991493272',
-            'despacho_gratis'=> 30000,
-        ];
-    }
-
-    public function configuracion(): View
-    {
-        $settings = $this->loadSettings();
+        $settings = $ajustes->all();
         return view('admin.configuracion', compact('settings'));
     }
 
-    public function configuracionSave(Request $request): RedirectResponse
+    public function configuracionSave(Request $request, \App\Support\Settings $ajustes): RedirectResponse
     {
-        $settings = array_merge($this->loadSettings(), $request->only([
+        $valores = $request->only([
             'empresa','rut','email','telefono','direccion','comuna','ciudad','horario',
             'banco','tipo_cuenta','nro_cuenta','titular','rut_titular','email_pagos',
-            'whatsapp','despacho_gratis',
+            'whatsapp','despacho_gratis','despacho_estandar','despacho_express',
             'mantencion_mensaje','mantencion_fin',
-        ]));
+        ]);
 
-        $settings['mantencion_activa'] = $request->boolean('mantencion_activa');
+        foreach (['despacho_gratis', 'despacho_estandar', 'despacho_express'] as $campo) {
+            if (isset($valores[$campo])) {
+                $valores[$campo] = (int) $valores[$campo];
+            }
+        }
 
-        file_put_contents($this->settingsPath(), json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $valores['mantencion_activa'] = $request->boolean('mantencion_activa');
+
+        $ajustes->save($valores);
+
         return back()->with('success', 'Configuración guardada correctamente.');
     }
 }

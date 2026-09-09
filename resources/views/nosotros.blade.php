@@ -61,7 +61,7 @@
     <div class="text-center space-y-4">
         <h2 class="text-2xl font-bold text-slate-800">¿Listo para probar nuestra agua?</h2>
         <div class="flex flex-wrap justify-center gap-3">
-            <a href="{{ route('catalogo') }}" class="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-sm tracking-wide transition-all">
+            <a href="{{ route('productos.index') }}" class="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-sm tracking-wide transition-all">
                 Ver Catálogo
             </a>
             <a href="{{ route('empresas') }}" class="px-6 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-sm tracking-wide transition-all">

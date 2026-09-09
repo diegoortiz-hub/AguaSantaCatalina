@@ -1,4 +1,4 @@
-@php use Illuminate\Support\Facades\Storage; use Illuminate\Support\Str; @endphp
+﻿@php use Illuminate\Support\Facades\Storage; use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 @section('title', 'Inicio')
 
@@ -162,7 +162,7 @@
                             {{-- Cuerpo --}}
                             <rect x="28" y="24" width="104" height="148" rx="20" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
                             {{-- Nivel de agua --}}
-                            <rect x="30" y="82" width="100" height="88" rx="0 0 18 18" fill="rgba(125,211,252,0.35)"/>
+                            <path d="M30 82 h100 v74 a14 14 0 0 1 -14 14 h-72 a14 14 0 0 1 -14 -14 z" fill="rgba(125,211,252,0.35)"/>
                             <path d="M30 82 Q80 70 130 82" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none"/>
                             {{-- Etiqueta --}}
                             <rect x="44" y="44" width="72" height="50" rx="8" fill="rgba(255,255,255,0.18)"/>
@@ -346,7 +346,7 @@
                     <span class="badge badge-green mb-3">PARA EMPRESAS</span>
                     <h3 class="text-2xl font-black text-[#0A3D7A] mb-2" style="font-family:'Poppins',sans-serif;">Soluciones Corporativas</h3>
                     <p class="text-gray-600 text-sm mb-4">Precios especiales por volumen y contratos mensuales</p>
-                    <a href="https://wa.me/56981493272?text=Hola!%20Me%20interesa%20una%20cotización%20para%20empresa" target="_blank" class="btn-whatsapp text-sm px-5 py-2.5">
+                    <a href="https://wa.me/{{ $ajustes->whatsappNumero() }}?text=Hola!%20Me%20interesa%20una%20cotización%20para%20empresa" target="_blank" class="btn-whatsapp text-sm px-5 py-2.5">
                         Cotizar ahora
                     </a>
                 </div>

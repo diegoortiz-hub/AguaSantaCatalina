@@ -14,8 +14,17 @@
         couponValid: false,
         nombre: '', email: '', telefono: '', direccion: '', comuna: '', ciudad: '',
         touched: false,
+        init() {
+            // Arrastra el cupón que el usuario ya aplicó en el carrito lateral.
+            this.coupon = $store.cart.couponCode || '';
+            if (this.coupon) this.validateCoupon();
+        },
         get subtotal() { return $store.cart.subtotal; },
-        get shippingCost() { return this.subtotal >= 15000 ? 0 : (this.shipping === 'express' ? 3990 : 2500); },
+        get shippingCost() {
+            const t = window.TIENDA.despacho;
+            if (this.subtotal >= t.gratis_desde) return 0;
+            return this.shipping === 'express' ? t.express : t.estandar;
+        },
         get total() { return this.subtotal + this.shippingCost - this.couponDiscount; },
         goStep2() {
             this.touched = true;
@@ -46,6 +55,7 @@
                 ciudad: this.ciudad,
                 metodo_pago: this.payment,
                 cupon: this.coupon,
+                envio: this.shipping,
             };
             const res = await fetch('/api/orders', {
                 method: 'POST',
@@ -148,7 +158,7 @@
                     </h2>
                     <div class="space-y-3">
                         @foreach([
-                            ['standard', 'Despacho Estándar', 'Entrega en 24–48 horas hábiles', '$2.500 (Gratis sobre $15.000)', 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'],
+                            ['standard', 'Despacho Estándar', 'Entrega en 24–48 horas hábiles', '$' . number_format($ajustes->get('despacho_estandar'), 0, ',', '.') . ' (Gratis sobre $' . number_format($ajustes->get('despacho_gratis'), 0, ',', '.') . ')', 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4'],
                             ['express',  'Despacho Express',  'Entrega el mismo día (antes 12h)', '$3.990', 'M13 10V3L4 14h7v7l9-11h-7z'],
                         ] as [$val,$title,$sub,$price,$ico])
                         <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all"
@@ -292,7 +302,7 @@
             <div class="mt-5 pt-4 border-t border-gray-100 space-y-2">
                 @foreach([
                     ['M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', 'Pago 100% seguro'],
-                    ['M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1.75 12.5A2 2 0 008.73 22h6.54a2 2 0 001.98-1.5L19 8', 'Despacho gratis sobre $15.000'],
+                    ['M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1.75 12.5A2 2 0 008.73 22h6.54a2 2 0 001.98-1.5L19 8', 'Despacho gratis sobre $' . number_format($ajustes->get('despacho_gratis'), 0, ',', '.')],
                     ['M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z', 'Soporte L–S 8–20h'],
                 ] as [$path, $label])
                 <div class="flex items-center gap-2 text-xs text-gray-500">

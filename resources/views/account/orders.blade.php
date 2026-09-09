@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Mis Pedidos')
 
 @section('content')
@@ -121,7 +121,7 @@
                                class="btn-primary text-xs py-1.5 px-4">Volver a pedir</a>
                             @endif
                             @if($order->metodo_pago === 'whatsapp' && in_array($order->estado, ['pendiente','confirmado']))
-                            <a href="https://wa.me/56981493272?text=Hola!%20Consulta%20sobre%20mi%20pedido%20%23{{ str_pad($order->id,5,'0',STR_PAD_LEFT) }}"
+                            <a href="https://wa.me/{{ $ajustes->whatsappNumero() }}?text=Hola!%20Consulta%20sobre%20mi%20pedido%20%23{{ str_pad($order->id,5,'0',STR_PAD_LEFT) }}"
                                target="_blank" class="btn-whatsapp text-xs py-1.5 px-4">WhatsApp</a>
                             @endif
                         </div>

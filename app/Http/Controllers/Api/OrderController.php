@@ -29,6 +29,7 @@ class OrderController extends Controller
             'metodo_pago'   => 'required|in:webpay,mercadopago,transferencia,whatsapp,contra_entrega',
             'notas'         => 'nullable|string|max:1000',
             'cupon'         => 'nullable|string|max:50',
+            'envio'         => 'nullable|in:standard,express',
         ]);
 
         $cartItems = CartItem::with('product')
@@ -50,7 +51,13 @@ class OrderController extends Controller
 
         $order = DB::transaction(function () use ($validated, $cartItems) {
             $subtotal = $cartItems->sum(fn ($i) => $i->product->precio * $i->cantidad);
-            $despacho = $subtotal >= 30000 ? 0 : 2990;
+
+            $tarifas  = app(\App\Support\Settings::class)->publicos()['despacho'];
+            $express  = ($validated['envio'] ?? 'standard') === 'express';
+            $despacho = $subtotal >= $tarifas['gratis_desde']
+                ? 0
+                : ($express ? $tarifas['express'] : $tarifas['estandar']);
+
             $descuento = 0;
 
             // Validar cupón si existe

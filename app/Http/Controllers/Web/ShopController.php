@@ -16,7 +16,9 @@ class ShopController extends Controller
     {
         $banners    = Banner::activo()->get();
         $destacados = Product::with('category')->activo()->destacado()->conStock()->limit(8)->get();
-        $categories = Category::activo()->ordenado()->get();
+        $categories = Category::activo()->ordenado()
+            ->withCount(['products' => fn ($q) => $q->activo()])
+            ->get();
 
         return view('home', compact('banners', 'destacados', 'categories'));
     }

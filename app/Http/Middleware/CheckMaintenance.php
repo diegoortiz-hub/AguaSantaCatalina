@@ -2,12 +2,15 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Settings;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckMaintenance
 {
+    public function __construct(private Settings $settings) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         // Admin y login siempre pasan
@@ -15,12 +18,7 @@ class CheckMaintenance
             return $next($request);
         }
 
-        $path = storage_path('app/settings.json');
-        if (! file_exists($path)) {
-            return $next($request);
-        }
-
-        $settings = json_decode(file_get_contents($path), true) ?? [];
+        $settings = $this->settings->all();
 
         if (empty($settings['mantencion_activa'])) {
             return $next($request);

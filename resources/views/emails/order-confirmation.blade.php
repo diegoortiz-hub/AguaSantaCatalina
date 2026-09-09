@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -133,7 +133,7 @@
         <p>
             Aguas Santa Catalina SpA · Santiago, Chile<br>
             ¿Tienes dudas? Escríbenos a <a href="mailto:contacto@aguassantacatalina.cl" style="color:#1a56c4;">contacto@aguassantacatalina.cl</a><br>
-            o al WhatsApp <strong>+56 9 8149 3272</strong> · L–S 8–20h
+            o al WhatsApp <strong>{{ $ajustes->get('telefono') }}</strong> · L–S 8–20h
         </p>
     </div>
 </div>

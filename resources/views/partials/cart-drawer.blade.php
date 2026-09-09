@@ -34,7 +34,7 @@
             get communeShipping() {
                 const premium = ['Colina / Chicureo'];
                 const cost = premium.includes(this.commune) ? 3500 : 2500;
-                return $store.cart.subtotal >= 15000 ? 0 : cost;
+                return $store.cart.subtotal >= window.TIENDA.despacho.gratis_desde ? 0 : cost;
             }
         }"
     >

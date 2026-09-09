@@ -151,11 +151,23 @@
                 <p class="text-xs text-slate-400">Costo de envío y umbral de despacho gratuito</p>
             </div>
         </div>
-        <div class="max-w-xs">
-            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Monto Mínimo para Despacho Gratis (CLP $)</label>
-            <input type="number" name="despacho_gratis" value="{{ $settings['despacho_gratis'] ?? 30000 }}" min="0"
-                   class="w-full px-3.5 py-2.5 text-sm font-mono font-bold rounded-xl border border-slate-200 focus:border-[#1a56c4] outline-none">
+        <div class="grid sm:grid-cols-3 gap-4">
+            @foreach([
+                ['despacho_gratis',   'Despacho gratis desde (CLP $)', 'Sobre este monto el envío no se cobra'],
+                ['despacho_estandar', 'Despacho estándar (CLP $)',     'Entrega en 24–48 hrs hábiles'],
+                ['despacho_express',  'Despacho express (CLP $)',      'Entrega el mismo día'],
+            ] as [$campo, $label, $ayuda])
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">{{ $label }}</label>
+                <input type="number" name="{{ $campo }}" value="{{ $settings[$campo] }}" min="0"
+                       class="w-full px-3.5 py-2.5 text-sm font-mono font-bold rounded-xl border border-slate-200 focus:border-[#1a56c4] outline-none">
+                <p class="text-[11px] text-slate-400 mt-1">{{ $ayuda }}</p>
+            </div>
+            @endforeach
         </div>
+        <p class="text-xs text-slate-500 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-2.5">
+            Estas tarifas se usan tanto en el sitio como al cobrar el pedido, así que el total mostrado al cliente siempre coincide con el cobrado.
+        </p>
 
         <div class="border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
             <table class="w-full text-left text-xs border-collapse">
