@@ -198,13 +198,13 @@
                 ['M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z','Atención personalizada','L–S 8–20h','#0A3D7A'],
                 ['M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15','Compromiso Ambiental','Bidones retornables','#1FA855'],
             ] as [$ico,$title,$sub,$color])
-            <div class="flex items-center gap-2.5 px-4 py-3">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background:{{ $color }}15;">
-                    <svg class="w-4 h-4" style="color:{{ $color }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $ico }}"/></svg>
+            <div class="flex items-center gap-3 px-4 py-4">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background:{{ $color }}15;">
+                    <svg class="w-6 h-6" style="color:{{ $color }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $ico }}"/></svg>
                 </div>
                 <div>
-                    <div class="text-xs font-bold text-[#0A3D7A]" style="font-family:'Poppins',sans-serif;">{{ $title }}</div>
-                    <div class="text-[10px] text-gray-400">{{ $sub }}</div>
+                    <div class="text-sm font-bold text-[#0A3D7A] leading-snug" style="font-family:'Poppins',sans-serif;">{{ $title }}</div>
+                    <div class="text-xs text-gray-500 mt-0.5">{{ $sub }}</div>
                 </div>
             </div>
             @endforeach
@@ -249,15 +249,15 @@
             $color = $catColors[$cat->slug] ?? '#1a56c4';
         @endphp
         <a href="{{ route('productos.index', ['categoria'=>$cat->slug]) }}"
-           class="card group flex flex-col items-center text-center p-5 hover:border-[#1a56c4]/30 hover:shadow-md transition-all cursor-pointer">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110"
+           class="card group flex flex-col items-center text-center p-6 hover:border-[#1a56c4]/30 hover:shadow-md transition-all cursor-pointer">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-3.5 transition-transform group-hover:scale-110"
                  style="background:{{ $color }}15;">
-                <svg class="w-6 h-6" style="color:{{ $color }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $ico }}"/>
+                <svg class="w-8 h-8" style="color:{{ $color }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="{{ $ico }}"/>
                 </svg>
             </div>
-            <div class="text-sm font-semibold text-[#0A3D7A] leading-tight mb-1" style="font-family:'Poppins',sans-serif;">{{ $cat->nombre }}</div>
-            <div class="text-xs text-gray-400 mt-auto">{{ $cat->products_count }} productos</div>
+            <div class="text-base font-semibold text-[#0A3D7A] leading-snug mb-1" style="font-family:'Poppins',sans-serif;">{{ $cat->nombre }}</div>
+            <div class="text-sm text-gray-500 mt-auto">{{ $cat->products_count }} {{ $cat->products_count == 1 ? 'producto' : 'productos' }}</div>
         </a>
         @endforeach
     </div>
@@ -297,12 +297,12 @@
                     </button>
                 </div>
                 {{-- Info --}}
-                <div class="p-3 flex flex-col flex-1">
-                    <p class="text-[10px] text-[#1a56c4] font-medium mb-0.5">{{ $p->category->nombre }}</p>
-                    <a href="{{ route('productos.show', $p->slug) }}" class="text-xs font-semibold text-gray-800 hover:text-[#0A3D7A] leading-tight mb-2 line-clamp-2 flex-1" style="font-family:'Poppins',sans-serif;">
+                <div class="p-4 flex flex-col flex-1">
+                    <p class="text-xs text-[#1a56c4] font-medium mb-1">{{ $p->category->nombre }}</p>
+                    <a href="{{ route('productos.show', $p->slug) }}" class="text-sm font-semibold text-gray-800 hover:text-[#0A3D7A] leading-snug mb-2 line-clamp-2 flex-1" style="font-family:'Poppins',sans-serif;">
                         {{ $p->nombre }}
                     </a>
-                    <div class="stars text-xs mb-1">★★★★★ <span class="text-gray-400 font-normal" style="font-family:'Inter',sans-serif;">({{ rand(12,98) }})</span></div>
+                    <div class="stars text-sm mb-1.5">★★★★★ <span class="text-gray-400 font-normal" style="font-family:'Inter',sans-serif;">({{ rand(12,98) }})</span></div>
                     <div class="flex items-baseline gap-1.5 mb-3">
                         <span class="text-lg font-black text-[#0A3D7A]" style="font-family:'Poppins',sans-serif;">${{ number_format($p->precio, 0, ',', '.') }}</span>
                         @if($p->precio_original)
@@ -310,8 +310,8 @@
                         @endif
                     </div>
                     <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }})"
-                        class="w-full btn-primary text-xs py-2 justify-center">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        class="w-full btn-primary text-sm py-2.5 justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         Al carrito
                     </button>
                 </div>

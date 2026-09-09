@@ -143,14 +143,17 @@
                     @endif
                 </div>
                 <div class="p-4 flex flex-col flex-1">
-                    <p class="text-[10px] text-[#1a56c4] font-medium mb-0.5 uppercase tracking-wide">{{ $p->category->nombre }}</p>
+                    <p class="text-xs text-[#1a56c4] font-medium mb-1 uppercase tracking-wide">{{ $p->category->nombre }}</p>
                     <a href="{{ route('productos.show', $p->slug) }}"
-                       class="text-sm font-semibold text-gray-800 hover:text-[#0A3D7A] leading-snug mb-2 flex-1 line-clamp-2"
+                       class="text-base font-semibold text-gray-800 hover:text-[#0A3D7A] leading-snug mb-2 flex-1 line-clamp-2"
                        style="font-family:'Poppins',sans-serif;">{{ $p->nombre }}</a>
-                    <div class="stars text-xs mb-2">★★★★★ <span class="text-gray-400 text-xs" style="font-family:'Inter',sans-serif;">({{ rand(8,120) }})</span></div>
+                    <div class="stars text-sm mb-2">★★★★★ <span class="text-gray-400 text-sm" style="font-family:'Inter',sans-serif;">({{ rand(8,120) }})</span></div>
 
                     @if($p->stock > 0 && $p->stock <= $p->stock_minimo)
-                    <span class="text-xs text-orange-600 font-medium mb-1">⚠ Solo {{ $p->stock }} disponibles</span>
+                    <span class="text-xs text-orange-600 font-medium mb-1 inline-flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.33 16a2 2 0 001.74 3z"/></svg>
+                        Solo {{ $p->stock }} disponibles
+                    </span>
                     @elseif($p->stock === 0)
                     <span class="text-xs text-red-500 font-medium mb-1">Agotado</span>
                     @endif

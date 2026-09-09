@@ -134,13 +134,13 @@
             @endphp
             <div class="grid grid-cols-2 gap-3 mb-6">
                 @foreach($trustBadges as [$path, $t, $s, $color])
-                <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background:{{ $color }}15;">
-                        <svg class="w-4 h-4" fill="none" stroke="{{ $color }}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $path }}"/></svg>
+                <div class="flex items-center gap-3 p-3.5 bg-gray-50 rounded-xl">
+                    <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background:{{ $color }}15;">
+                        <svg class="w-6 h-6" fill="none" stroke="{{ $color }}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $path }}"/></svg>
                     </div>
                     <div>
-                        <div class="text-xs font-semibold text-gray-700">{{ $t }}</div>
-                        <div class="text-[10px] text-gray-400">{{ $s }}</div>
+                        <div class="text-sm font-semibold text-gray-700 leading-snug">{{ $t }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5">{{ $s }}</div>
                     </div>
                 </div>
                 @endforeach
