@@ -7,6 +7,8 @@
     <meta name="color-scheme" content="light">
     <meta name="darkreader-lock">
     <title>@yield('title', 'Aguas Santa Catalina') — Agua Pura para tu Hogar</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -40,14 +42,9 @@
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
 
         {{-- Logo --}}
-        <a href="{{ route('home') }}" class="flex items-center gap-3 shrink-0">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#0A3D7A;">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C12 2 5 10 5 14a7 7 0 0014 0c0-4-7-12-7-12z"/></svg>
-            </div>
-            <div class="hidden sm:block leading-tight">
-                <div class="font-bold text-[#0A3D7A] text-base" style="font-family:'Poppins',sans-serif;">Aguas Santa Catalina</div>
-                <div class="text-[10px] text-gray-400 font-medium tracking-wide uppercase">pura por naturaleza</div>
-            </div>
+        <a href="{{ route('home') }}" class="flex items-center shrink-0" aria-label="Aguas Santa Catalina — Inicio">
+            <img src="{{ asset('images/logo.png') }}" alt="Aguas Santa Catalina — pura por naturaleza"
+                 class="h-10 sm:h-12 w-auto">
         </a>
 
         {{-- Search --}}
@@ -153,15 +150,8 @@
 
             {{-- Col 1: Logo + desc --}}
             <div>
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C12 2 5 10 5 14a7 7 0 0014 0c0-4-7-12-7-12z"/></svg>
-                    </div>
-                    <div>
-                        <div class="font-bold text-base" style="font-family:'Poppins',sans-serif;">Aguas Santa Catalina</div>
-                        <div class="text-[10px] text-white/60 uppercase tracking-wide">pura por naturaleza</div>
-                    </div>
-                </div>
+                <img src="{{ asset('images/logo-blanco.png') }}" alt="Aguas Santa Catalina — pura por naturaleza"
+                     class="h-14 w-auto mb-4">
                 <p class="text-sm text-white/70 leading-relaxed mb-4">Distribuimos agua purificada de alta calidad a hogares y empresas en Santiago y Región Metropolitana desde 2008.</p>
                 <div class="flex gap-3">
                     <a href="#" class="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition text-xs">f</a>

@@ -165,7 +165,7 @@ Alpine.store('cart', {
             .map(i => `• ${i.quantity}x ${i.name} ($${(i.price * i.quantity).toLocaleString('es-CL')})`)
             .join('\n');
         const msg = `*Nuevo Pedido - Aguas Santa Catalina*\n\nHola! Quiero pedir:\n\n${lines}\n\n*Total estimado:* $${this.total.toLocaleString('es-CL')}\n\n¡Gracias!`;
-        window.open(`https://wa.me/${window.TIENDA.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+        window.open(`https://wa.me/${window.TIENDA?.whatsapp ?? ''}?text=${encodeURIComponent(msg)}`, '_blank');
     },
 
     async sync() {

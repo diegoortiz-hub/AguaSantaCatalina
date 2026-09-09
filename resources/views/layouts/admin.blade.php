@@ -6,6 +6,8 @@
     <meta name="color-scheme" content="light">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') — Santa Catalina</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <script>window.TIENDA = @json($ajustes->publicos());</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-[#F1F5F9] text-slate-800 font-sans antialiased" x-data="{ sidebarOpen: false }">
@@ -20,15 +22,10 @@
 
         {{-- Brand --}}
         <div class="p-5 flex items-center gap-3 border-b border-white/10">
-            <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner shrink-0">
-                <svg class="w-6 h-6 text-sky-300" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
-                    <path d="M12 2c0 0-5 5-5 10a5 5 0 0010 0C17 7 12 2 12 2z"/>
-                </svg>
-            </div>
+            <img src="{{ asset('images/isotipo-blanco.png') }}" alt="" class="h-11 w-auto shrink-0">
             <div>
                 <p class="font-bold text-[17px] leading-tight text-white tracking-tight" style="font-family:'Poppins',sans-serif;">Santa Catalina</p>
-                <p class="text-[11px] text-sky-200/80 font-medium tracking-wide uppercase">Aguas Purificadas</p>
+                <p class="text-[11px] text-sky-200/80 font-medium tracking-wide uppercase">Panel de administración</p>
             </div>
         </div>
 

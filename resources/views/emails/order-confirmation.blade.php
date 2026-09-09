@@ -9,6 +9,7 @@
         .wrapper { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
         .header { background: linear-gradient(135deg, #0A3D7A 0%, #1E6FBF 100%); padding: 32px 40px; text-align: center; }
         .header h1 { margin: 0; color: #fff; font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+        .header-logo { display: block; height: 52px; width: auto; margin: 0 auto; border: 0; }
         .header p { margin: 6px 0 0; color: rgba(255,255,255,.75); font-size: 14px; }
         .badge { display: inline-block; margin: 24px auto 0; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 999px; padding: 6px 20px; font-size: 13px; font-weight: 700; letter-spacing: .5px; }
         .body { padding: 32px 40px; }
@@ -42,7 +43,7 @@
 <div class="wrapper">
     {{-- Header --}}
     <div class="header">
-        <h1>Aguas Santa Catalina</h1>
+        <img src="{{ asset('images/logo-blanco.png') }}" alt="Aguas Santa Catalina" class="header-logo">
         <p>Agua purificada · Entrega a domicilio</p>
         <div class="badge">Pedido #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</div>
     </div>
