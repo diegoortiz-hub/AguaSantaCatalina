@@ -64,7 +64,7 @@ Alpine.store('cart', {
         return Math.max(0, this.FREE_SHIPPING - this.subtotal);
     },
 
-    async add(productId, productName, price, quantity = 1) {
+    async add(productId, productName, price, quantity = 1, image = null) {
         try {
             const res = await fetch('/api/cart', {
                 method: 'POST',
@@ -80,7 +80,7 @@ Alpine.store('cart', {
                 if (existing) {
                     existing.quantity += quantity;
                 } else {
-                    this.items.push({ id: productId, name: productName, price, quantity });
+                    this.items.push({ id: productId, name: productName, price, quantity, image });
                 }
                 this.open = true;
                 this.showToast(`"${productName}" agregado al carrito`);
@@ -178,7 +178,7 @@ Alpine.store('cart', {
                 name:     i.product.nombre,
                 price:    parseFloat(i.product.precio),
                 quantity: i.cantidad,
-                image:    i.product.imagen,
+                image:    i.product.imagen ? `/storage/${i.product.imagen}` : null,
             }));
         }
     },

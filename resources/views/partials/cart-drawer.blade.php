@@ -109,8 +109,9 @@
             <template x-for="item in $store.cart.items" :key="item.id">
                 <div class="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
                     {{-- Thumbnail --}}
-                    <div class="w-14 h-14 rounded-xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);">
-                        <svg class="w-6 h-6 text-[#1a56c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <div class="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);">
+                        <img x-show="item.image" :src="item.image" :alt="item.name" class="w-full h-full object-contain p-1">
+                        <svg x-show="!item.image" class="w-6 h-6 text-[#1a56c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     </div>
                     {{-- Info --}}
                     <div class="flex-1 min-w-0">

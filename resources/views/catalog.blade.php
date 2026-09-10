@@ -136,7 +136,7 @@
                     </div>
                     @endif
                     @if($p->stock > 0)
-                    <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }})"
+                    <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }}, 1, '{{ $p->imagen ? Storage::url($p->imagen) : '' }}')"
                         class="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity btn-primary text-xs px-4 py-1.5 whitespace-nowrap shadow">
                         + Agregar
                     </button>
@@ -171,7 +171,7 @@
                             Ver
                         </a>
                         @if($p->stock > 0)
-                        <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }})"
+                        <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }}, 1, '{{ $p->imagen ? Storage::url($p->imagen) : '' }}')"
                             class="flex-1 btn-primary text-xs py-2 justify-center">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             Carrito

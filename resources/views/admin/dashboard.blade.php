@@ -102,7 +102,7 @@
                     <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 </div>
                 @if($stats['stock_bajo'] > 0)
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">Action Required</span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">Requiere atención</span>
                 @else
                 <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">OK</span>
                 @endif

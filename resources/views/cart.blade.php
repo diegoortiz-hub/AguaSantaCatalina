@@ -42,8 +42,9 @@
                         <div class="px-6 py-4 border-b border-gray-50 last:border-0 grid grid-cols-12 gap-4 items-center">
                             {{-- Image + name --}}
                             <div class="col-span-12 md:col-span-6 flex items-center gap-4">
-                                <div class="w-16 h-16 rounded-xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);">
-                                    <svg class="w-7 h-7 text-[#1a56c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                <div class="w-16 h-16 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);">
+                                    <img x-show="item.image" :src="item.image" :alt="item.name" class="w-full h-full object-contain p-1">
+                                    <svg x-show="!item.image" class="w-7 h-7 text-[#1a56c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                 </div>
                                 <div class="min-w-0">
                                     <div class="font-semibold text-gray-800 text-sm leading-snug mb-0.5" x-text="item.name" style="font-family:'Poppins',sans-serif;"></div>

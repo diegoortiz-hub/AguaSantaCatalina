@@ -287,11 +287,16 @@
                     @if($p->precio_original && $p->precio_original > $p->precio)
                     <span class="absolute top-2 right-2 badge badge-red z-10">-{{ $p->porcentajeDescuento() }}%</span>
                     @endif
+                    @if($p->imagen)
+                    <img src="{{ Storage::url($p->imagen) }}" alt="{{ $p->nombre }}"
+                         class="max-h-full max-w-full object-contain p-3 group-hover:scale-105 transition-transform duration-300">
+                    @else
                     <div class="group-hover:scale-110 transition-transform duration-300">
                         <svg class="w-16 h-16 text-[#1a56c4]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     </div>
+                    @endif
                     {{-- Quick add --}}
-                    <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }})"
+                    <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }}, 1, '{{ $p->imagen ? Storage::url($p->imagen) : '' }}')"
                         class="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity btn-primary text-xs px-4 py-1.5 whitespace-nowrap shadow">
                         + Agregar
                     </button>
@@ -309,7 +314,7 @@
                         <span class="text-xs text-gray-400 line-through">${{ number_format($p->precio_original, 0, ',', '.') }}</span>
                         @endif
                     </div>
-                    <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }})"
+                    <button @click="$store.cart.add({{ $p->id }}, '{{ addslashes($p->nombre) }}', {{ $p->precio }}, 1, '{{ $p->imagen ? Storage::url($p->imagen) : '' }}')"
                         class="w-full btn-primary text-sm py-2.5 justify-center">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         Al carrito

@@ -66,7 +66,7 @@
                     <span class="text-base font-extrabold text-cyan-700">${{ number_format($product->precio, 0, ',', '.') }}</span>
                     <span class="text-xs text-slate-400 line-through">${{ number_format($product->precio_original, 0, ',', '.') }}</span>
                 </div>
-                <button onclick="$store.cart.add({ id: {{ $product->id }}, nombre: '{{ addslashes($product->nombre) }}', precio: {{ $product->precio }}, imagen: '{{ $product->imagen ? Storage::url($product->imagen) : '' }}' })"
+                <button @click="$store.cart.add({{ $product->id }}, '{{ addslashes($product->nombre) }}', {{ $product->precio }}, 1, '{{ $product->imagen ? Storage::url($product->imagen) : '' }}')"
                         class="w-full py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold transition-all">
                     Agregar al carrito
                 </button>

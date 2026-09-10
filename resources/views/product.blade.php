@@ -17,7 +17,7 @@
 </div>
 
 <div class="max-w-7xl mx-auto px-4 py-10"
-     x-data="{ qty: 1, activeImg: 0 }">
+     x-data="{ qty: 1 }">
 
     <div class="grid lg:grid-cols-2 gap-12">
 
@@ -31,19 +31,12 @@
                 @if($product->tieneDescuento())
                 <span class="absolute top-4 right-4 badge badge-red text-sm px-3 py-1">-{{ $product->porcentajeDescuento() }}% OFF</span>
                 @endif
+                @if($product->imagen)
+                <img src="{{ Storage::url($product->imagen) }}" alt="{{ $product->nombre }}"
+                     class="max-h-full max-w-full object-contain p-6">
+                @else
                 <svg class="w-44 h-44 text-[#1a56c4]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            </div>
-
-            {{-- Thumbnails --}}
-            <div class="grid grid-cols-4 gap-2">
-                @for($i=0;$i<4;$i++)
-                <button @click="activeImg={{ $i }}"
-                    class="card overflow-hidden transition-all"
-                    :style="activeImg === {{ $i }} ? 'border:2px solid #1a56c4;' : 'border:2px solid transparent;'"
-                    style="height:80px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);">
-                    <svg class="w-8 h-8 {{ $i === 0 ? 'text-[#1a56c4]' : 'text-[#1a56c4]/30' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                </button>
-                @endfor
+                @endif
             </div>
         </div>
 
@@ -106,7 +99,7 @@
                     <button @click="qty = Math.min({{ $product->stock }}, qty + 1)"
                         class="px-4 py-3 text-gray-600 hover:bg-gray-50 font-bold text-lg transition">+</button>
                 </div>
-                <button @click="$store.cart.add({{ $product->id }}, '{{ addslashes($product->nombre) }}', {{ $product->precio }}, qty)"
+                <button @click="$store.cart.add({{ $product->id }}, '{{ addslashes($product->nombre) }}', {{ $product->precio }}, qty, '{{ $product->imagen ? Storage::url($product->imagen) : '' }}')"
                     class="btn-primary flex-1 text-base py-3.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     AGREGAR AL CARRITO
