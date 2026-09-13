@@ -125,7 +125,7 @@
         @endif
 
         <div class="cta">
-            <a href="{{ url('/pedido/'.$order->id.'/confirmacion') }}">Ver detalle de mi pedido →</a>
+            <a href="{{ route('pedido.confirmacion', $order->token) }}">Ver detalle de mi pedido →</a>
         </div>
     </div>
 

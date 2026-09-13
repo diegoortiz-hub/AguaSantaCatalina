@@ -91,9 +91,11 @@ class ShopController extends Controller
         return view('checkout');
     }
 
-    public function confirmation(int $id): View
+    public function confirmation(string $token): View
     {
-        $order = Order::with('items.product')->findOrFail($id);
+        // Se busca por token y no por id: los id son correlativos y cualquiera
+        // podría recorrerlos para leer datos de compras ajenas.
+        $order = Order::with('items.product')->where('token', $token)->firstOrFail();
 
         return view('confirmation', compact('order'));
     }

@@ -114,7 +114,7 @@
                             <span class="font-black text-[#0A3D7A] text-base ml-1" style="font-family:'Poppins',sans-serif;">${{ number_format($order->total, 0, ',', '.') }}</span>
                         </div>
                         <div class="flex gap-2">
-                            <a href="{{ route('pedido.confirmacion', $order->id) }}"
+                            <a href="{{ route('pedido.confirmacion', $order->token) }}"
                                class="btn-outline text-xs py-1.5 px-4">Ver detalle</a>
                             @if($order->estado === 'entregado')
                             <a href="{{ route('productos.index') }}"

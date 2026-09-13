@@ -116,10 +116,11 @@ class OrderController extends Controller
         return response()->json($order->load('items'), 201);
     }
 
-    /** GET /api/orders/{id} */
-    public function show(int $id): JsonResponse
+    /** GET /api/orders/{token} */
+    public function show(string $token): JsonResponse
     {
-        $order = Order::with('items.product')->findOrFail($id);
+        // Igual que la vista de confirmación: sólo se llega con el token del pedido.
+        $order = Order::with('items.product')->where('token', $token)->firstOrFail();
 
         return response()->json($order);
     }

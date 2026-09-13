@@ -18,7 +18,9 @@ Route::get('/productos', [ShopController::class, 'catalog'])->name('productos.in
 Route::get('/productos/{slug}', [ShopController::class, 'product'])->name('productos.show');
 Route::get('/carrito', [ShopController::class, 'cart'])->name('carrito');
 Route::get('/checkout', [ShopController::class, 'checkout'])->name('checkout');
-Route::get('/pedido/{id}/confirmacion', [ShopController::class, 'confirmation'])->name('pedido.confirmacion');
+Route::get('/pedido/{token}/confirmacion', [ShopController::class, 'confirmation'])
+    ->whereUuid('token')
+    ->name('pedido.confirmacion');
 
 // ── Páginas informativas ──────────────────────────────────────────────────
 Route::get('/empresas', [ShopController::class, 'empresas'])->name('empresas');
@@ -29,8 +31,8 @@ Route::get('/ofertas', [ShopController::class, 'ofertas'])->name('ofertas');
 // ── Autenticación ─────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('throttle:5,1');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
@@ -42,7 +44,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // ── Panel admin (requiere auth + rol admin) ───────────────────────────────
-Route::prefix('admin')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/',                                  [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
     // Productos

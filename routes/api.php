@@ -29,7 +29,7 @@ Route::prefix('v1')->group(function () {
 
     // ── Pedidos ───────────────────────────────────────────────────────────
     Route::post('/orders',     [OrderController::class, 'store']);
-    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::get('/orders/{token}', [OrderController::class, 'show'])->whereUuid('token');
 
     // ── Cupones ───────────────────────────────────────────────────────────
     Route::post('/coupons/validate', [CouponController::class, 'validate']);
@@ -44,6 +44,6 @@ Route::prefix('')->group(function () {
     Route::get('/cart/{session}',              [CartController::class, 'show']);
     Route::delete('/cart/{session}/{product}', [CartController::class, 'destroy']);
     Route::post('/orders',     [OrderController::class, 'store']);
-    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::get('/orders/{token}', [OrderController::class, 'show'])->whereUuid('token');
     Route::post('/coupons/validate', [CouponController::class, 'validate']);
 });

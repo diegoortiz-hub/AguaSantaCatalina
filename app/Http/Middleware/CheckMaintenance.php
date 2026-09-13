@@ -25,7 +25,7 @@ class CheckMaintenance
         }
 
         // Admins autenticados pueden ver la tienda igualmente
-        if (auth()->check() && auth()->user()->es_admin) {
+        if ($request->user()?->isAdmin()) {
             return $next($request);
         }
 

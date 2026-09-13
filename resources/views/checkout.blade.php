@@ -65,7 +65,7 @@
             const order = await res.json();
             if (res.ok) {
                 $store.cart.clear();
-                window.location = `/pedido/${order.id}/confirmacion`;
+                window.location = `/pedido/${order.token}/confirmacion`;
             } else {
                 alert(order.message || 'Error al procesar el pedido');
             }
