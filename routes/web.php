@@ -33,6 +33,12 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('throttle:5,1');
+
+    // Recuperación de contraseña
+    Route::get('/olvide-mi-clave', [AuthController::class, 'forgotForm'])->name('password.request');
+    Route::post('/olvide-mi-clave', [AuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');
+    Route::get('/restablecer-clave/{token}', [AuthController::class, 'resetForm'])->name('password.reset');
+    Route::post('/restablecer-clave', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 

@@ -18,56 +18,107 @@ class AdminController extends Controller
 {
     // ── Dashboard ──────────────────────────────────────────────────────────
 
+    /** Estados que cuentan como venta efectiva. */
+    private const ESTADOS_VENTA = ['confirmado', 'enviado', 'entregado'];
+
     public function dashboard(): View
     {
-        $hoy       = today();
-        $mes       = now()->month;
-        $año       = now()->year;
-        $ayer      = today()->subDay();
+        $inicioHoy  = today();
+        $inicioAyer = today()->subDay();
+        $inicioMes  = now()->startOfMonth();
+        $inicioMesAnterior = now()->subMonthNoOverflow()->startOfMonth();
 
-        // Stats principales
-        $ventas_hoy   = Order::whereDate('created_at', $hoy)->whereIn('estado', ['confirmado','enviado','entregado'])->sum('total');
-        $ventas_ayer  = Order::whereDate('created_at', $ayer)->whereIn('estado', ['confirmado','enviado','entregado'])->sum('total');
-        $ventas_mes   = Order::whereMonth('created_at', $mes)->whereYear('created_at', $año)->whereIn('estado', ['confirmado','enviado','entregado'])->sum('total');
+        // Rangos en vez de whereDate/whereMonth: envolver created_at en una función
+        // impide que el motor aproveche un índice sobre la columna.
+        $ventas_hoy  = Order::whereIn('estado', self::ESTADOS_VENTA)
+            ->whereBetween('created_at', [$inicioHoy, $inicioHoy->copy()->endOfDay()])->sum('total');
+        $ventas_ayer = Order::whereIn('estado', self::ESTADOS_VENTA)
+            ->whereBetween('created_at', [$inicioAyer, $inicioAyer->copy()->endOfDay()])->sum('total');
+        $ventas_mes  = Order::whereIn('estado', self::ESTADOS_VENTA)
+            ->where('created_at', '>=', $inicioMes)->sum('total');
 
         $pedidos_pendientes = Order::where('estado', 'pendiente')->count();
-        $pedidos_mes        = Order::whereMonth('created_at', $mes)->whereYear('created_at', $año)->count();
+        // Excluye cancelados para que cuadre con el criterio de ventas_mes.
+        $pedidos_mes = Order::where('estado', '!=', 'cancelado')
+            ->where('created_at', '>=', $inicioMes)->count();
 
-        $clientes_mes       = User::where('rol', 'cliente')->whereMonth('created_at', $mes)->whereYear('created_at', $año)->count();
-        $clientes_mes_ant   = User::where('rol', 'cliente')->whereMonth('created_at', now()->subMonth()->month)->count();
+        $clientes_mes = User::where('rol', 'cliente')
+            ->where('created_at', '>=', $inicioMes)->count();
+        $clientes_mes_ant = User::where('rol', 'cliente')
+            ->whereBetween('created_at', [$inicioMesAnterior, $inicioMes])->count();
 
-        $stock_bajo         = Product::whereColumn('stock', '<=', 'stock_minimo')->activo()->count();
+        $stock_bajo = Product::whereColumn('stock', '<=', 'stock_minimo')->activo()->count();
 
-        // Variaciones porcentuales
         $var_ventas   = $ventas_ayer > 0 ? round((($ventas_hoy - $ventas_ayer) / $ventas_ayer) * 100) : 0;
         $var_clientes = $clientes_mes_ant > 0 ? round((($clientes_mes - $clientes_mes_ant) / $clientes_mes_ant) * 100) : 0;
 
         $stats = compact('ventas_hoy','ventas_mes','ventas_ayer','pedidos_pendientes','pedidos_mes','clientes_mes','clientes_mes_ant','stock_bajo','var_ventas','var_clientes');
 
-        // Gráfico 30 días — ventas diarias
-        $ventasDiarias = Order::selectRaw('DATE(created_at) as fecha, SUM(total) as total')
-            ->whereIn('estado', ['confirmado','enviado','entregado'])
-            ->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()])
-            ->groupBy('fecha')
-            ->orderBy('fecha')
-            ->pluck('total', 'fecha')
-            ->toArray();
+        // ── Series reales para los gráficos ──────────────────────────────
+        $desde30 = now()->subDays(29)->startOfDay();
 
-        $chartLabels = [];
-        $chartData   = [];
-        for ($i = 29; $i >= 0; $i--) {
-            $d = now()->subDays($i)->format('Y-m-d');
-            $chartLabels[] = now()->subDays($i)->format('d');
-            $chartData[]   = $ventasDiarias[$d] ?? 0;
+        $serieVentas = $this->rellenarDias(
+            Order::selectRaw('DATE(created_at) as fecha, SUM(total) as valor')
+                ->whereIn('estado', self::ESTADOS_VENTA)
+                ->where('created_at', '>=', $desde30)
+                ->groupBy('fecha')->pluck('valor', 'fecha')->toArray(),
+            30
+        );
+
+        $seriePedidos = $this->rellenarDias(
+            Order::selectRaw('DATE(created_at) as fecha, COUNT(*) as valor')
+                ->where('estado', '!=', 'cancelado')
+                ->where('created_at', '>=', $desde30)
+                ->groupBy('fecha')->pluck('valor', 'fecha')->toArray(),
+            30
+        );
+
+        $serieClientes = $this->rellenarDias(
+            User::selectRaw('DATE(created_at) as fecha, COUNT(*) as valor')
+                ->where('rol', 'cliente')
+                ->where('created_at', '>=', $desde30)
+                ->groupBy('fecha')->pluck('valor', 'fecha')->toArray(),
+            30
+        );
+
+        // Serie de 12 meses para la pestaña "Año"
+        $porMes = Order::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as mes, SUM(total) as valor")
+            ->whereIn('estado', self::ESTADOS_VENTA)
+            ->where('created_at', '>=', now()->subMonthsNoOverflow(11)->startOfMonth())
+            ->groupBy('mes')->pluck('valor', 'mes')->toArray();
+
+        $serieAnual = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $m = now()->subMonthsNoOverflow($i)->format('Y-m');
+            $serieAnual[] = (float) ($porMes[$m] ?? 0);
         }
+
+        // Distribución real de medios de pago del mes
+        $mediosPago = Order::selectRaw('metodo_pago, COUNT(*) as pedidos, SUM(total) as monto')
+            ->where('estado', '!=', 'cancelado')
+            ->where('created_at', '>=', $inicioMes)
+            ->groupBy('metodo_pago')
+            ->orderByDesc('pedidos')
+            ->get();
 
         $pedidos_recientes    = Order::with(['items'])->latest()->limit(8)->get();
         $productos_stock_bajo = Product::with('category')->whereColumn('stock', '<=', 'stock_minimo')->activo()->get();
 
         return view('admin.dashboard', compact(
             'stats', 'pedidos_recientes', 'productos_stock_bajo',
-            'chartLabels', 'chartData'
+            'serieVentas', 'seriePedidos', 'serieClientes', 'serieAnual', 'mediosPago'
         ));
+    }
+
+    /** Completa con ceros los días sin registros para que la serie no tenga huecos. */
+    private function rellenarDias(array $datos, int $dias): array
+    {
+        $serie = [];
+        for ($i = $dias - 1; $i >= 0; $i--) {
+            $serie[] = (float) ($datos[now()->subDays($i)->format('Y-m-d')] ?? 0);
+        }
+
+        return $serie;
     }
 
     // ── Productos ──────────────────────────────────────────────────────────

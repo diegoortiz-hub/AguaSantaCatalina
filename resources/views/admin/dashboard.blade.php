@@ -21,6 +21,21 @@
 @php
     $var_v = $stats['var_ventas'];
     $var_c = $stats['var_clientes'];
+
+    // Convierte una serie de 30 días en los puntos de una polilínea de 80×24.
+    $spark = function (array $serie, int $w = 80, int $h = 24): string {
+        if (count($serie) < 2) {
+            return '';
+        }
+        $min   = min($serie);
+        $rango = (max($serie) - $min) ?: 1;
+        $paso  = $w / (count($serie) - 1);
+
+        return collect($serie)->values()
+            ->map(fn ($v, $i) => round($i * $paso, 1) . ',' . round($h - 1 - (($v - $min) / $rango) * ($h - 2), 1))
+            ->implode(' ');
+    };
+    $conDatos = fn (array $s) => array_sum($s) > 0;
 @endphp
 <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
 
@@ -39,11 +54,15 @@
             <p class="text-xs text-slate-400 font-medium uppercase tracking-wide">Ventas del día</p>
             <p class="text-2xl font-bold text-slate-900 mt-0.5">${{ number_format($stats['ventas_hoy'], 0, ',', '.') }}</p>
             <p class="text-xs text-slate-400 mt-1">vs ayer ${{ number_format($stats['ventas_ayer'], 0, ',', '.') }}</p>
-            {{-- Sparkline --}}
+            {{-- Últimos 30 días --}}
+            @if($conDatos($serieVentas))
             <svg viewBox="0 0 80 24" class="w-full h-8 mt-3 text-blue-400" preserveAspectRatio="none">
                 <polyline fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                    points="0,18 10,14 20,20 30,8 40,12 50,6 60,10 70,4 80,8"/>
+                    points="{{ $spark($serieVentas) }}"/>
             </svg>
+            @else
+            <p class="text-[10px] text-slate-300 mt-3 h-8 flex items-end">Sin ventas en los últimos 30 días</p>
+            @endif
         </div>
     </div>
 
@@ -64,10 +83,14 @@
             <p class="text-xs text-slate-400 font-medium uppercase tracking-wide">Pedidos pendientes</p>
             <p class="text-2xl font-bold text-slate-900 mt-0.5">{{ $stats['pedidos_pendientes'] }}</p>
             <p class="text-xs text-slate-400 mt-1">{{ $stats['pedidos_mes'] }} totales este mes</p>
+            @if($conDatos($seriePedidos))
             <svg viewBox="0 0 80 24" class="w-full h-8 mt-3 text-amber-400" preserveAspectRatio="none">
                 <polyline fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                    points="0,10 10,14 20,8 30,18 40,6 50,12 60,16 70,10 80,14"/>
+                    points="{{ $spark($seriePedidos) }}"/>
             </svg>
+            @else
+            <p class="text-[10px] text-slate-300 mt-3 h-8 flex items-end">Sin pedidos en los últimos 30 días</p>
+            @endif
         </div>
     </div>
 
@@ -86,10 +109,14 @@
             <p class="text-xs text-slate-400 font-medium uppercase tracking-wide">Clientes nuevos</p>
             <p class="text-2xl font-bold text-slate-900 mt-0.5">{{ $stats['clientes_mes'] }}</p>
             <p class="text-xs text-slate-400 mt-1">este mes</p>
+            @if($conDatos($serieClientes))
             <svg viewBox="0 0 80 24" class="w-full h-8 mt-3 text-emerald-400" preserveAspectRatio="none">
                 <polyline fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                    points="0,20 10,16 20,18 30,12 40,10 50,8 60,6 70,4 80,2"/>
+                    points="{{ $spark($serieClientes) }}"/>
             </svg>
+            @else
+            <p class="text-[10px] text-slate-300 mt-3 h-8 flex items-end">Sin registros nuevos en 30 días</p>
+            @endif
         </div>
     </div>
 
@@ -110,10 +137,10 @@
             <p class="text-xs text-slate-400 font-medium uppercase tracking-wide">Stock bajo</p>
             <p class="text-2xl font-bold text-slate-900 mt-0.5">{{ $stats['stock_bajo'] }}</p>
             <p class="text-xs text-slate-400 mt-1">productos requieren reposición</p>
-            <svg viewBox="0 0 80 24" class="w-full h-8 mt-3 text-rose-400" preserveAspectRatio="none">
-                <polyline fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                    points="0,4 10,8 20,6 30,14 40,10 50,18 60,14 70,20 80,18"/>
-            </svg>
+            {{-- Sin gráfico: el stock bajo es un estado actual, no una serie de tiempo --}}
+            <div class="h-8 mt-3 flex items-end">
+                <a href="{{ route('admin.productos.index') }}" class="text-[11px] font-semibold text-rose-600 hover:text-rose-700">Ver productos por reponer →</a>
+            </div>
         </div>
     </div>
 </div>
@@ -126,10 +153,9 @@
          x-data="{
             activePeriod: 'mes',
             chartData: {
-                hoy:    @json(array_values(array_slice($chartData, -1))),
-                semana: @json(array_values(array_slice($chartData, -7))),
-                mes:    @json(array_values($chartData)),
-                año:    @json(array_values($chartData))
+                semana: @json(array_values(array_slice($serieVentas, -7))),
+                mes:    @json(array_values($serieVentas)),
+                año:    @json(array_values($serieAnual))
             },
             get currentData() { return this.chartData[this.activePeriod] },
             get maxVal() { return Math.max(...this.currentData, 1) },
@@ -170,7 +196,7 @@
                 <p class="text-xs text-slate-400 mt-0.5">${{ number_format($stats['ventas_mes'], 0, ',', '.') }} este mes</p>
             </div>
             <div class="flex gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                @foreach(['hoy' => 'Hoy', 'semana' => 'Semana', 'mes' => 'Mes', 'año' => 'Año'] as $key => $label)
+                @foreach(['semana' => '7 días', 'mes' => '30 días', 'año' => '12 meses'] as $key => $label)
                 <button @click="activePeriod = '{{ $key }}'"
                         :class="activePeriod === '{{ $key }}' ? 'bg-white text-slate-800 shadow-sm font-semibold' : 'text-slate-400 hover:text-slate-600'"
                         class="px-3 py-1.5 text-xs rounded-lg transition-all">{{ $label }}</button>
@@ -294,35 +320,65 @@
     {{-- Métodos de pago (2/5) --}}
     <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
         <h2 class="font-bold text-slate-800 text-base mb-1">Métodos de Pago</h2>
-        <p class="text-xs text-slate-400 mb-5">Distribución este mes</p>
-        {{-- Donut SVG --}}
+        <p class="text-xs text-slate-400 mb-5">Distribución de este mes</p>
+
+        @php
+            $totalPedidos = $mediosPago->sum('pedidos');
+            $paleta = [
+                'webpay'         => ['#1a56c4', 'Webpay / Transbank'],
+                'transferencia'  => ['#10b981', 'Transferencia'],
+                'whatsapp'       => ['#f59e0b', 'WhatsApp'],
+                'mercadopago'    => ['#6366f1', 'MercadoPago'],
+                'contra_entrega' => ['#64748b', 'Contra entrega'],
+            ];
+            $circunferencia = 2 * M_PI * 48;
+            $acumulado = 0;
+        @endphp
+
+        @if($totalPedidos === 0)
+        <div class="flex flex-col items-center justify-center py-10 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mb-3">
+                <svg class="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            </div>
+            <p class="text-sm font-semibold text-slate-500">Aún no hay pagos este mes</p>
+            <p class="text-xs text-slate-400 mt-1">El desglose aparece con el primer pedido</p>
+        </div>
+        @else
         <div class="flex items-center justify-center mb-5">
             <svg viewBox="0 0 120 120" class="w-36 h-36">
                 <circle cx="60" cy="60" r="48" fill="none" stroke="#e2e8f0" stroke-width="18"/>
-                {{-- Webpay 65% = 301.5deg of 360 = 302/464.5 ≈ 301.6 --}}
-                <circle cx="60" cy="60" r="48" fill="none" stroke="#1a56c4" stroke-width="18"
-                    stroke-dasharray="195.75 105.66" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
-                {{-- Transferencia 25% --}}
-                <circle cx="60" cy="60" r="48" fill="none" stroke="#10b981" stroke-width="18"
-                    stroke-dasharray="75.29 226.12" stroke-dashoffset="-195.75" transform="rotate(-90 60 60)"/>
-                {{-- WhatsApp 10% --}}
-                <circle cx="60" cy="60" r="48" fill="none" stroke="#f59e0b" stroke-width="18"
-                    stroke-dasharray="30.12 271.29" stroke-dashoffset="-271.04" transform="rotate(-90 60 60)"/>
-                <text x="60" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1e293b" font-family="system-ui">65%</text>
-                <text x="60" y="70" text-anchor="middle" font-size="7" fill="#94a3b8" font-family="system-ui">Webpay</text>
+                @foreach($mediosPago as $medio)
+                    @php
+                        $fraccion = $medio->pedidos / $totalPedidos;
+                        $largo    = $fraccion * $circunferencia;
+                        $color    = $paleta[$medio->metodo_pago][0] ?? '#94a3b8';
+                    @endphp
+                    <circle cx="60" cy="60" r="48" fill="none" stroke="{{ $color }}" stroke-width="18"
+                        stroke-dasharray="{{ round($largo, 2) }} {{ round($circunferencia - $largo, 2) }}"
+                        stroke-dashoffset="{{ round(-$acumulado, 2) }}" transform="rotate(-90 60 60)"/>
+                    @php $acumulado += $largo; @endphp
+                @endforeach
+                @php $principal = $mediosPago->first(); @endphp
+                <text x="60" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1e293b" font-family="system-ui">{{ round(($principal->pedidos / $totalPedidos) * 100) }}%</text>
+                <text x="60" y="70" text-anchor="middle" font-size="7" fill="#94a3b8" font-family="system-ui">{{ $paleta[$principal->metodo_pago][1] ?? $principal->metodo_pago }}</text>
             </svg>
         </div>
         <div class="space-y-3">
-            @foreach([['Webpay / Transbank', '65%', 'bg-[#1a56c4]'],['Transferencia','25%','bg-emerald-500'],['WhatsApp','10%','bg-amber-400']] as [$label,$pct,$dot])
+            @foreach($mediosPago as $medio)
+            @php [$color, $etiqueta] = $paleta[$medio->metodo_pago] ?? ['#94a3b8', ucfirst($medio->metodo_pago)]; @endphp
             <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full {{ $dot }} shrink-0"></span>
-                    <span class="text-sm text-slate-600">{{ $label }}</span>
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $color }}"></span>
+                    <span class="text-sm text-slate-600 truncate">{{ $etiqueta }}</span>
                 </div>
-                <span class="text-sm font-bold text-slate-800">{{ $pct }}</span>
+                <div class="text-right shrink-0 ml-2">
+                    <span class="text-sm font-bold text-slate-800">{{ round(($medio->pedidos / $totalPedidos) * 100) }}%</span>
+                    <span class="text-xs text-slate-400 ml-1">({{ $medio->pedidos }})</span>
+                </div>
             </div>
             @endforeach
         </div>
+        @endif
     </div>
 </div>
 

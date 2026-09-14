@@ -16,6 +16,13 @@
                 <p class="text-sm text-gray-500 mt-1">Ingresa a tu cuenta para ver tus pedidos</p>
             </div>
 
+            @if(session('status'))
+            <div class="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm mb-5 flex items-start gap-2">
+                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>{{ session('status') }}</span>
+            </div>
+            @endif
+
             @if($errors->has('email') || $errors->has('password'))
             <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-5 flex items-center gap-2">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -39,7 +46,7 @@
                         <input type="checkbox" name="remember" class="rounded border-gray-300">
                         Recordarme
                     </label>
-                    <a href="#" class="text-sm text-[#1a56c4] hover:text-[#0A3D7A] transition">¿Olvidaste tu contraseña?</a>
+                    <a href="{{ route('password.request') }}" class="text-sm text-[#1a56c4] hover:text-[#0A3D7A] transition">¿Olvidaste tu contraseña?</a>
                 </div>
                 <button type="submit" class="btn-primary w-full justify-center text-base py-3.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
