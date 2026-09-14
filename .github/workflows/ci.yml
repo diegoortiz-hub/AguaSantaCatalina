@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pruebas:
+    name: Pruebas
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        # Se prueba sobre MySQL, el mismo motor que usa la aplicación,
+        # para no dejar pasar diferencias de dialecto.
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: aguas_santa_catalina_testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, bcmath, intl, gd, zip
+          coverage: none
+
+      - name: Cachear dependencias de Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Instalar dependencias PHP
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Preparar entorno
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Compilar assets
+        # Las vistas usan @vite, así que sin el manifiesto las pruebas que
+        # renderizan páginas fallan.
+        run: |
+          npm ci
+          npm run build
+
+      - name: Ejecutar pruebas
+        run: php artisan test

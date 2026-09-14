@@ -81,11 +81,19 @@ class AdminController extends Controller
             30
         );
 
-        // Serie de 12 meses para la pestaña "Año"
-        $porMes = Order::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as mes, SUM(total) as valor")
+        // Serie de 12 meses. Se agrupa por día (DATE() existe en MySQL y en SQLite,
+        // a diferencia de DATE_FORMAT) y el total mensual se arma en PHP.
+        $porDia = Order::selectRaw('DATE(created_at) as fecha, SUM(total) as valor')
             ->whereIn('estado', self::ESTADOS_VENTA)
             ->where('created_at', '>=', now()->subMonthsNoOverflow(11)->startOfMonth())
-            ->groupBy('mes')->pluck('valor', 'mes')->toArray();
+            ->groupBy('fecha')->pluck('valor', 'fecha');
+
+        $porMes = $porDia->reduce(function (array $acc, $valor, $fecha) {
+            $mes = substr((string) $fecha, 0, 7);
+            $acc[$mes] = ($acc[$mes] ?? 0) + (float) $valor;
+
+            return $acc;
+        }, []);
 
         $serieAnual = [];
         for ($i = 11; $i >= 0; $i--) {
