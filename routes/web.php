@@ -99,6 +99,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::patch('/menus/{menuItem}/toggle',         [AdminController::class, 'menusToggle'])->name('admin.menus.toggle');
     Route::delete('/menus/{menuItem}',               [AdminController::class, 'menusDestroy'])->name('admin.menus.destroy');
 
+    // Estado del sistema y analítica propia
+    Route::get('/sistema',                           [AdminController::class, 'sistema'])->name('admin.sistema');
+
     // Configuración
     Route::get('/configuracion',                     [AdminController::class, 'configuracion'])->name('admin.configuracion');
     Route::post('/configuracion',                    [AdminController::class, 'configuracionSave'])->name('admin.configuracion.save');

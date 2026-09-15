@@ -11,6 +11,8 @@ use App\Models\Order;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\Analitica;
+use App\Support\EstadoSistema;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -442,6 +444,33 @@ class AdminController extends Controller
     }
 
     // ── Configuración ──────────────────────────────────────────────────────
+
+    // ── Estado del sistema y analítica ─────────────────────────────────────
+
+    public function sistema(Request $request, EstadoSistema $estado, Analitica $analitica): View
+    {
+        $dias = (int) $request->integer('dias', 30);
+        $dias = in_array($dias, [7, 30, 90], true) ? $dias : 30;
+
+        $analitica = $analitica->paraUltimos($dias);
+
+        $comprobaciones = $estado->todo();
+
+        return view('admin.sistema', [
+            'comprobaciones' => $comprobaciones,
+            'resumen'        => $estado->resumen($comprobaciones),
+            'dias'           => $dias,
+            'hayDatos'       => $analitica->hayDatos(),
+            'visitasHoy'     => $analitica->visitasHoy(),
+            'visitantesHoy'  => $analitica->visitantesHoy(),
+            'visitas'        => $analitica->visitas(),
+            'visitantes'     => $analitica->visitantes(),
+            'conversion'     => $analitica->conversion(),
+            'serie'          => $analitica->serieDiaria(),
+            'paginasTop'     => $analitica->paginasTop(),
+            'origenesTop'    => $analitica->origenesTop(),
+        ]);
+    }
 
     // ── Páginas editables ──────────────────────────────────────────────────
 
