@@ -190,8 +190,25 @@
                 <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
+                @if(request('q'))
+                <h3 class="text-lg font-semibold text-gray-600 mb-2" style="font-family:'Poppins',sans-serif;">
+                    Nada coincide con «{{ request('q') }}»
+                </h3>
+                <p class="text-gray-400 mb-5 max-w-sm mx-auto text-sm">
+                    Prueba con una palabra más corta o mira las categorías.
+                </p>
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    @foreach($categories->take(6) as $sugerencia)
+                    <a href="{{ route('productos.index', ['categoria' => $sugerencia->slug]) }}"
+                       class="px-3 py-1.5 text-xs font-semibold border border-gray-200 rounded-full hover:border-[#1a56c4] hover:text-[#1a56c4] transition">
+                        {{ $sugerencia->nombre }}
+                    </a>
+                    @endforeach
+                </div>
+                @else
                 <h3 class="text-lg font-semibold text-gray-600 mb-2" style="font-family:'Poppins',sans-serif;">Sin resultados</h3>
                 <p class="text-gray-400 mb-6">No encontramos productos con esos filtros.</p>
+                @endif
                 <a href="{{ route('productos.index') }}" class="btn-primary">Ver todos los productos</a>
             </div>
             @endforelse

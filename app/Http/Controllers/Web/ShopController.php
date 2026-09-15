@@ -31,11 +31,7 @@ class ShopController extends Controller
             $query->whereHas('category', fn ($q) => $q->where('slug', $request->categoria));
         }
         if ($request->filled('q')) {
-            $term = $request->q;
-            $query->where(fn ($q) => $q
-                ->where('nombre', 'like', "%{$term}%")
-                ->orWhere('descripcion', 'like', "%{$term}%")
-            );
+            $this->aplicarBusqueda($query, (string) $request->q);
         }
         if ($request->filled('precio_min')) {
             $query->where('precio', '>=', (int) $request->precio_min);
@@ -66,6 +62,57 @@ class ShopController extends Controller
         $maxPriceInDb    = Product::activo()->max('precio') ?? 150000;
 
         return view('catalog', compact('products', 'categories', 'currentCategory', 'maxPriceInDb'));
+    }
+
+    /**
+     * Busca cada palabra en nombre, descripción, SKU y nombre de categoría.
+     * Todas las palabras deben aparecer, pero da igual en qué campo.
+     */
+    private function aplicarBusqueda($query, string $texto): void
+    {
+        $palabras = collect(preg_split('/\s+/', trim($texto), -1, PREG_SPLIT_NO_EMPTY))
+            ->take(6)
+            ->map(fn ($palabra) => $this->raiz($palabra))
+            ->filter();
+
+        if ($palabras->isEmpty()) {
+            return;
+        }
+
+        $query->where(function ($externa) use ($palabras) {
+            foreach ($palabras as $palabra) {
+                $patron = '%'.$palabra.'%';
+
+                $externa->where(function ($interna) use ($patron) {
+                    $interna->where('nombre', 'like', $patron)
+                        ->orWhere('descripcion', 'like', $patron)
+                        ->orWhere('sku', 'like', $patron)
+                        ->orWhereHas('category', fn ($c) => $c->where('nombre', 'like', $patron));
+                });
+            }
+        });
+    }
+
+    /**
+     * Quita el plural para que "aguas" encuentre "Agua" y "dispensadores"
+     * encuentre "Dispensador". Escapa además los comodines de LIKE, que si no
+     * dejarían que un "%" en la búsqueda devolviera el catálogo completo.
+     */
+    private function raiz(string $palabra): string
+    {
+        $palabra = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], trim($palabra));
+
+        if (mb_strlen($palabra) <= 4) {
+            return $palabra;
+        }
+
+        foreach (['es', 's'] as $sufijo) {
+            if (str_ends_with(mb_strtolower($palabra), $sufijo)) {
+                return mb_substr($palabra, 0, mb_strlen($palabra) - mb_strlen($sufijo));
+            }
+        }
+
+        return $palabra;
     }
 
     public function product(string $slug): View
