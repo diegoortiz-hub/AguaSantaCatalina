@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             CouponSeeder::class,
             NavegacionSeeder::class,
             MediaSeeder::class,
+            FotosProductoSeeder::class,
             BannerSeeder::class,
         ]);
     }
