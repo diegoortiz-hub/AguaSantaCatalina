@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Planes Empresas B2B — Aguas Santa Catalina')
 

@@ -84,7 +84,29 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     // Estadísticas
     Route::get('/estadisticas',                      [AdminController::class, 'estadisticas'])->name('admin.estadisticas');
 
+    // Páginas editables
+    Route::get('/paginas',                           [AdminController::class, 'paginasIndex'])->name('admin.paginas.index');
+    Route::get('/paginas/crear',                     [AdminController::class, 'paginasCreate'])->name('admin.paginas.create');
+    Route::post('/paginas',                          [AdminController::class, 'paginasStore'])->name('admin.paginas.store');
+    Route::get('/paginas/{page}/editar',             [AdminController::class, 'paginasEdit'])->name('admin.paginas.edit');
+    Route::put('/paginas/{page}',                    [AdminController::class, 'paginasUpdate'])->name('admin.paginas.update');
+    Route::delete('/paginas/{page}',                 [AdminController::class, 'paginasDestroy'])->name('admin.paginas.destroy');
+
+    // Menús del sitio
+    Route::get('/menus',                             [AdminController::class, 'menusIndex'])->name('admin.menus.index');
+    Route::post('/menus',                            [AdminController::class, 'menusStore'])->name('admin.menus.store');
+    Route::put('/menus/{menuItem}',                  [AdminController::class, 'menusUpdate'])->name('admin.menus.update');
+    Route::patch('/menus/{menuItem}/toggle',         [AdminController::class, 'menusToggle'])->name('admin.menus.toggle');
+    Route::delete('/menus/{menuItem}',               [AdminController::class, 'menusDestroy'])->name('admin.menus.destroy');
+
     // Configuración
     Route::get('/configuracion',                     [AdminController::class, 'configuracion'])->name('admin.configuracion');
     Route::post('/configuracion',                    [AdminController::class, 'configuracionSave'])->name('admin.configuracion.save');
 });
+
+// ── Páginas editables ─────────────────────────────────────────────────────
+// Va al final a propósito: es un comodín y sólo debe atender lo que ninguna
+// ruta anterior reclamó.
+Route::get('/{slug}', [ShopController::class, 'page'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('pagina');

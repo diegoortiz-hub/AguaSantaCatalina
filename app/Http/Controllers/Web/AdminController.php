@@ -6,12 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\Page;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -438,18 +443,184 @@ class AdminController extends Controller
 
     // ── Configuración ──────────────────────────────────────────────────────
 
-    public function configuracion(\App\Support\Settings $ajustes): View
+    // ── Páginas editables ──────────────────────────────────────────────────
+
+    public function paginasIndex(): View
+    {
+        $paginas = Page::orderBy('titulo')->get();
+
+        return view('admin.paginas.index', compact('paginas'));
+    }
+
+    public function paginasCreate(): View
+    {
+        return view('admin.paginas.form', ['page' => new Page(['activo' => true])]);
+    }
+
+    public function paginasStore(Request $request): RedirectResponse
+    {
+        Page::create($this->validarPagina($request));
+        MenuItem::olvidarCache();
+
+        return redirect()->route('admin.paginas.index')->with('success', 'Página creada.');
+    }
+
+    public function paginasEdit(Page $page): View
+    {
+        return view('admin.paginas.form', compact('page'));
+    }
+
+    public function paginasUpdate(Request $request, Page $page): RedirectResponse
+    {
+        $page->update($this->validarPagina($request, $page));
+        MenuItem::olvidarCache();
+
+        return redirect()->route('admin.paginas.index')->with('success', 'Página actualizada.');
+    }
+
+    public function paginasDestroy(Page $page): RedirectResponse
+    {
+        $enlaces = MenuItem::where('tipo', 'pagina')->where('destino', $page->slug)->count();
+        $page->delete();
+        MenuItem::olvidarCache();
+
+        $aviso = $enlaces > 0
+            ? "Página eliminada. Había {$enlaces} enlace(s) apuntando a ella: dejaron de mostrarse en el sitio."
+            : 'Página eliminada.';
+
+        return redirect()->route('admin.paginas.index')->with('success', $aviso);
+    }
+
+    private function validarPagina(Request $request, ?Page $page = null): array
+    {
+        $data = $request->validate([
+            'titulo'           => ['required', 'string', 'max:191'],
+            'slug'             => ['nullable', 'string', 'max:191', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'bajada'           => ['nullable', 'string', 'max:255'],
+            'contenido'        => ['nullable', 'string'],
+            'meta_descripcion' => ['nullable', 'string', 'max:300'],
+        ], [
+            'slug.regex' => 'La dirección sólo admite minúsculas, números y guiones.',
+        ]);
+
+        $data['activo'] = $request->boolean('activo');
+
+        // El slug se normaliza en el modelo; aquí sólo se comprueba que no choque.
+        $slug = Str::slug($data['slug'] ?: $data['titulo']);
+
+        $choca = Page::where('slug', $slug)
+            ->when($page, fn ($q) => $q->whereKeyNot($page->getKey()))
+            ->exists();
+
+        if ($choca) {
+            throw ValidationException::withMessages([
+                'slug' => "Ya existe una página en /{$slug}.",
+            ]);
+        }
+
+        // Una página no puede ocupar una dirección que ya usa la tienda.
+        if (in_array($slug, self::SLUGS_RESERVADOS, true)) {
+            throw ValidationException::withMessages([
+                'slug' => "/{$slug} es una dirección del sistema. Elige otra.",
+            ]);
+        }
+
+        return $data;
+    }
+
+    /** Direcciones que ya pertenecen a la tienda y no puede tomar una página. */
+    private const SLUGS_RESERVADOS = [
+        'admin', 'productos', 'carrito', 'checkout', 'ofertas', 'empresas',
+        'nosotros', 'contacto', 'login', 'logout', 'register', 'mi-cuenta',
+        'pedido', 'olvide-mi-clave', 'restablecer-clave', 'storage', 'up', 'api',
+    ];
+
+    // ── Menús del sitio ────────────────────────────────────────────────────
+
+    public function menusIndex(): View
+    {
+        $menus = MenuItem::orderBy('orden')->orderBy('id')->get()->groupBy('ubicacion');
+        $paginas    = Page::orderBy('titulo')->get(['titulo', 'slug']);
+        $categorias = Category::activo()->ordenado()->get(['nombre', 'slug']);
+
+        return view('admin.menus.index', compact('menus', 'paginas', 'categorias'));
+    }
+
+    public function menusStore(Request $request): RedirectResponse
+    {
+        MenuItem::create($this->validarEnlace($request));
+
+        return back()->with('success', 'Enlace agregado al menú.');
+    }
+
+    public function menusUpdate(Request $request, MenuItem $menuItem): RedirectResponse
+    {
+        $menuItem->update($this->validarEnlace($request));
+
+        return back()->with('success', 'Enlace actualizado.');
+    }
+
+    public function menusToggle(MenuItem $menuItem): RedirectResponse
+    {
+        $menuItem->update(['activo' => ! $menuItem->activo]);
+
+        return back()->with('success', $menuItem->activo ? 'Enlace visible.' : 'Enlace oculto.');
+    }
+
+    public function menusDestroy(MenuItem $menuItem): RedirectResponse
+    {
+        $menuItem->delete();
+
+        return back()->with('success', 'Enlace eliminado.');
+    }
+
+    private function validarEnlace(Request $request): array
+    {
+        $data = $request->validate([
+            'ubicacion' => ['required', Rule::in(array_keys(MenuItem::UBICACIONES))],
+            'etiqueta'  => ['required', 'string', 'max:60'],
+            'tipo'      => ['required', Rule::in(['ruta', 'categoria', 'pagina', 'url'])],
+            'destino'   => ['required', 'string', 'max:255'],
+            'orden'     => ['nullable', 'integer', 'min:0', 'max:999'],
+        ]);
+
+        $data['orden']         = $data['orden'] ?? 0;
+        $data['activo']        = $request->boolean('activo', true);
+        $data['nueva_pestana'] = $request->boolean('nueva_pestana');
+
+        // El destino se valida contra lo que existe, según el tipo: así un enlace
+        // no puede apuntar a una ruta de admin ni a una página borrada.
+        $valido = match ($data['tipo']) {
+            'ruta'      => array_key_exists($data['destino'], MenuItem::RUTAS_PERMITIDAS),
+            'categoria' => Category::where('slug', $data['destino'])->exists(),
+            'pagina'    => Page::where('slug', $data['destino'])->exists(),
+            'url'       => (bool) filter_var($data['destino'], FILTER_VALIDATE_URL)
+                            || str_starts_with($data['destino'], '/'),
+        };
+
+        if (! $valido) {
+            throw ValidationException::withMessages([
+                'destino' => 'El destino no existe o no está permitido para ese tipo de enlace.',
+            ]);
+        }
+
+        return $data;
+    }
+
+    public function configuracion(Settings $ajustes): View
     {
         $settings = $ajustes->all();
         return view('admin.configuracion', compact('settings'));
     }
 
-    public function configuracionSave(Request $request, \App\Support\Settings $ajustes): RedirectResponse
+    public function configuracionSave(Request $request, Settings $ajustes): RedirectResponse
     {
         $valores = $request->only([
             'empresa','rut','email','telefono','direccion','comuna','ciudad','horario',
             'banco','tipo_cuenta','nro_cuenta','titular','rut_titular','email_pagos',
             'whatsapp','despacho_gratis','despacho_estandar','despacho_express',
+            'footer_descripcion','footer_1_titulo','footer_2_titulo',
+            'red_facebook','red_instagram',
             'mantencion_mensaje','mantencion_fin',
         ]);
 

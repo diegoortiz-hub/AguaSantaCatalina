@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -44,6 +44,10 @@
                     ['route' => 'admin.banners.index',   'label' => 'Banners',      'icon' => 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', 'badge' => null],
                     ['route' => 'admin.cupones.index',   'label' => 'Cupones',      'icon' => 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z', 'badge' => null],
                 ];
+                $navSitio = [
+                    ['route' => 'admin.paginas.index', 'label' => 'Páginas', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                    ['route' => 'admin.menus.index',   'label' => 'Menús',   'icon' => 'M4 6h16M4 12h16M4 18h7'],
+                ];
             @endphp
 
             @foreach($navMain as $item)
@@ -64,6 +68,24 @@
                 @if(!empty($item['badge']))
                 <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold {{ $item['badge_color'] ?? 'bg-white/20 text-white' }}">{{ $item['badge'] }}</span>
                 @endif
+            </a>
+            @endforeach
+
+            <div class="h-px bg-white/10 my-3 mx-2"></div>
+            <p class="px-3 py-1 text-[11px] font-semibold text-white/40 uppercase tracking-wider">Contenido del Sitio</p>
+
+            @foreach($navSitio as $item)
+            @php
+                $activoSitio = request()->routeIs(rtrim($item['route'], '.index').'*');
+                $hrefSitio   = \Illuminate\Support\Facades\Route::has($item['route']) ? route($item['route']) : '#';
+            @endphp
+            <a href="{{ $hrefSitio }}"
+               class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all text-sm font-medium
+                      {{ $activoSitio ? 'bg-white/15 text-white font-semibold shadow-sm border border-white/10' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                <svg class="w-5 h-5 shrink-0 {{ $activoSitio ? 'text-sky-300' : 'text-white/60' }}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item['icon'] }}"/>
+                </svg>
+                <span>{{ $item['label'] }}</span>
             </a>
             @endforeach
 

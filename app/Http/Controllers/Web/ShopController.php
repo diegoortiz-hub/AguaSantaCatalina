@@ -115,6 +115,14 @@ class ShopController extends Controller
         return view('contacto');
     }
 
+    /** Páginas editables desde el panel (términos, privacidad, despacho, etc.). */
+    public function page(string $slug): View
+    {
+        $page = \App\Models\Page::activo()->where('slug', $slug)->firstOrFail();
+
+        return view('page', compact('page'));
+    }
+
     public function ofertas(): View
     {
         $products = Product::with('category')

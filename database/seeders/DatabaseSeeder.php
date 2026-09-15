@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             CommuneSeeder::class,
             CouponSeeder::class,
+            NavegacionSeeder::class,
         ]);
     }
 }

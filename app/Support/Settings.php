@@ -69,6 +69,13 @@ class Settings
             'despacho_gratis'   => 15000,
             'despacho_estandar' => 2500,
             'despacho_express'  => 3990,
+
+            // Textos del footer administrables desde el panel
+            'footer_descripcion' => 'Distribuimos agua purificada de alta calidad a hogares y empresas en Santiago y Región Metropolitana desde 2008.',
+            'footer_1_titulo'    => 'Productos',
+            'footer_2_titulo'    => 'Empresa',
+            'red_facebook'       => '',
+            'red_instagram'      => '',
         ];
     }
 

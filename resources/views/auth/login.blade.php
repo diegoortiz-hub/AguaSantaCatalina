@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'Ingresar a tu Cuenta')
 
 @section('content')

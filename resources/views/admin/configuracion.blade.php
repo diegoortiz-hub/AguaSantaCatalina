@@ -25,6 +25,7 @@
         ['bancarios',  'Datos Bancarios',       'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',                                                          false],
         ['whatsapp',   'WhatsApp y Atención',   'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', false],
         ['despacho',   'Zonas de Despacho',     'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0', false],
+        ['footer',     'Footer y Redes',        'M4 6h16M4 10h16M4 14h10M4 18h6', false],
         ['mantencion', 'Mantenimiento',         'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', !empty($settings['mantencion_activa'])],
     ] as [$key, $label, $ico, $alerta])
     <button @click="tab = '{{ $key }}'" type="button"
@@ -139,6 +140,50 @@
                 <p class="font-bold">Integración de Botón Flotante Activa</p>
                 <p class="text-emerald-700">Los clientes pueden iniciar conversaciones precargando su carrito o solicitando recargas de bidones con un toque.</p>
             </div>
+        </div>
+    </div>
+
+    {{-- Tab: Footer y Redes --}}
+    <div x-show="tab === 'footer'" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-5">
+        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <svg class="w-5 h-5 text-[#1a56c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h6"/></svg>
+            <div>
+                <h3 class="font-bold text-slate-900 text-base">Footer y redes sociales</h3>
+                <p class="text-xs text-slate-400">Textos del pie del sitio. Los enlaces se administran en <a href="{{ route('admin.menus.index') }}" class="text-[#1a56c4] font-semibold hover:underline">Menús</a>.</p>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Descripción bajo el logo</label>
+            <textarea name="footer_descripcion" rows="3"
+                      class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:border-[#1a56c4] outline-none">{{ $settings['footer_descripcion'] }}</textarea>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+            @foreach([
+                ['footer_1_titulo', 'Título de la columna 1', 'Productos'],
+                ['footer_2_titulo', 'Título de la columna 2', 'Empresa'],
+            ] as [$campo, $label, $ph])
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">{{ $label }}</label>
+                <input type="text" name="{{ $campo }}" value="{{ $settings[$campo] }}" placeholder="{{ $ph }}" maxlength="40"
+                       class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:border-[#1a56c4] outline-none">
+            </div>
+            @endforeach
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+            @foreach([
+                ['red_facebook',  'Facebook',  'https://facebook.com/tu-pagina'],
+                ['red_instagram', 'Instagram', 'https://instagram.com/tu-cuenta'],
+            ] as [$campo, $label, $ph])
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">{{ $label }}</label>
+                <input type="url" name="{{ $campo }}" value="{{ $settings[$campo] }}" placeholder="{{ $ph }}"
+                       class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:border-[#1a56c4] outline-none">
+                <p class="text-[11px] text-slate-400 mt-1">Si lo dejas vacío, el icono no se muestra.</p>
+            </div>
+            @endforeach
         </div>
     </div>
 
