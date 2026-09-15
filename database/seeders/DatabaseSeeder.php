@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             CommuneSeeder::class,
             CouponSeeder::class,
             NavegacionSeeder::class,
+            MediaSeeder::class,
+            BannerSeeder::class,
         ]);
     }
 }

@@ -170,7 +170,8 @@ class AdminController extends Controller
         $data = $request->validate([
             'nombre'          => 'required|string|max:191',
             'category_id'     => 'required|exists:categories,id',
-            'precio'          => 'required|numeric|min:0',
+            // Publicado exige precio: un producto visible en $0 se vende gratis.
+            'precio'          => ['required', 'numeric', 'min:0', Rule::when($request->boolean('activo'), ['gt:0'])],
             'precio_original' => 'nullable|numeric|min:0',
             'stock'           => 'required|integer|min:0',
             'stock_minimo'    => 'required|integer|min:0',
@@ -209,7 +210,8 @@ class AdminController extends Controller
         $data = $request->validate([
             'nombre'          => 'required|string|max:191',
             'category_id'     => 'required|exists:categories,id',
-            'precio'          => 'required|numeric|min:0',
+            // Publicado exige precio: un producto visible en $0 se vende gratis.
+            'precio'          => ['required', 'numeric', 'min:0', Rule::when($request->boolean('activo'), ['gt:0'])],
             'precio_original' => 'nullable|numeric|min:0',
             'stock'           => 'required|integer|min:0',
             'stock_minimo'    => 'required|integer|min:0',
