@@ -53,7 +53,7 @@ class RedireccionPorRolTest extends TestCase
         $admin = $this->usuario('admin');
 
         // Pedir /admin sin sesión deja la url guardada en intended.
-        $this->get('/admin')->assertRedirect('/login');
+        $this->get('/admin')->assertRedirect('/admin/acceso');
 
         $this->post('/login', ['email' => $admin->email, 'password' => 'secreto12'])
             ->assertRedirect(url('/admin'));

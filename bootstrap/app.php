@@ -21,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);
+
+        // Un invitado que pide algo del panel va a la puerta del panel, no al
+        // formulario de la tienda.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*')
+            ? route('admin.login')
+            : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\ShopController;
+use App\Http\Controllers\Web\AdminAuthController;
 use App\Http\Controllers\Web\AdminController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\AccountController;
@@ -47,6 +48,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/mi-cuenta', [AccountController::class, 'orders'])->name('mi-cuenta');
     Route::get('/mi-cuenta/pedidos', [AccountController::class, 'orders'])->name('account.orders');
     Route::get('/mi-cuenta/perfil', [AccountController::class, 'profile'])->name('account.profile');
+});
+
+// ── Puerta propia del panel ───────────────────────────────────────────────
+// El panel no comparte el formulario de /login: esa es una página de cliente,
+// con el bloque de registro y el acceso por WhatsApp al lado.
+Route::prefix('admin')->group(function () {
+    Route::get('/acceso', [AdminAuthController::class, 'loginForm'])->name('admin.login');
+    Route::post('/acceso', [AdminAuthController::class, 'login'])->name('admin.login.post')->middleware('throttle:5,1');
+    Route::post('/salir', [AdminAuthController::class, 'logout'])->name('admin.logout')->middleware('auth');
 });
 
 // ── Panel admin (requiere auth + rol admin) ───────────────────────────────

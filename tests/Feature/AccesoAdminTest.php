@@ -48,9 +48,10 @@ class AccesoAdminTest extends TestCase
         }
     }
 
-    public function test_un_visitante_sin_sesion_es_enviado_al_login(): void
+    public function test_un_visitante_sin_sesion_es_enviado_a_la_puerta_del_panel(): void
     {
-        $this->get('/admin')->assertRedirect('/login');
+        // No al formulario de la tienda: el panel tiene su propia puerta.
+        $this->get('/admin')->assertRedirect('/admin/acceso');
     }
 
     public function test_el_administrador_entra_a_todas_las_secciones(): void
