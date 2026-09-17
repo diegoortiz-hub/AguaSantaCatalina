@@ -62,6 +62,17 @@
         {{-- Right actions --}}
         <div class="flex items-center gap-1 ml-auto">
 
+            {{-- Acceso al panel: sin esto un administrador que inicia sesión
+                 queda en la vista de cliente y tiene que escribir /admin a mano. --}}
+            @auth
+            @if(auth()->user()->isAdmin())
+            <a href="{{ route('admin.dashboard') }}" class="hidden sm:flex flex-col items-center p-2 rounded-lg hover:bg-sky-50 transition text-[#0A3D7A]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m4 10V11m4 6V9M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <span class="text-[10px] font-semibold mt-0.5">Panel</span>
+            </a>
+            @endif
+            @endauth
+
             {{-- Mi cuenta --}}
             @auth
             <a href="{{ route('account.orders') }}" class="hidden sm:flex flex-col items-center p-2 rounded-lg hover:bg-gray-50 transition text-gray-600 hover:text-[#0A3D7A]">

@@ -29,9 +29,27 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            // Una cuenta desactivada no debe poder entrar ni a la tienda.
+            // Hasta ahora sólo el panel lo comprobaba, así que un cliente
+            // dado de baja seguía viendo sus pedidos.
+            if (! $request->user()->activo) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Esta cuenta está desactivada. Escríbenos si crees que es un error.',
+                ])->withInput($request->only('email', 'remember'));
+            }
+
             $request->session()->regenerate();
 
-            return redirect()->intended(route('mi-cuenta'));
+            // Cada rol aterriza donde trabaja. Se mantiene intended() para no
+            // perder la página que el usuario pedía antes de que lo mandáramos
+            // a iniciar sesión.
+            return redirect()->intended(
+                $request->user()->isAdmin() ? route('admin.dashboard') : route('mi-cuenta')
+            );
         }
 
         return back()->withErrors([
