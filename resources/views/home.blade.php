@@ -105,87 +105,9 @@
 </section>
 
 @else
-{{-- Static fallback hero --}}
-<section class="relative overflow-hidden" style="min-height:520px; background:linear-gradient(135deg,#0A3D7A 0%,#1E6FBF 60%,#0e5099 100%);">
-    {{-- Decorative circles --}}
-    <div class="absolute -top-20 -right-20 w-96 h-96 rounded-full opacity-10" style="background:radial-gradient(circle,#fff 0%,transparent 70%);"></div>
-    <div class="absolute -bottom-16 -left-16 w-72 h-72 rounded-full opacity-10" style="background:radial-gradient(circle,#fff 0%,transparent 70%);"></div>
-    <div class="absolute top-1/2 right-1/4 w-2 h-2 bg-white/30 rounded-full"></div>
-    <div class="absolute top-1/4 right-1/3 w-1 h-1 bg-white/40 rounded-full"></div>
-
-    <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 relative z-10">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-                <span class="inline-flex items-center gap-2 bg-white/15 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-                    <span class="w-1.5 h-1.5 bg-[#25D366] rounded-full animate-pulse"></span>
-                    Agua certificada · Entrega en 24h
-                </span>
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6" style="font-family:'Poppins',sans-serif;">
-                    AGUA PURA<br>
-                    <span style="color:#7dd3fc;">PARA TU HOGAR</span><br>
-                    Y EMPRESA
-                </h1>
-                <p class="text-white/80 text-lg leading-relaxed mb-8 max-w-md">
-                    Agua purificada por osmosis inversa, con entrega a domicilio en Santiago. Calidad certificada para tu familia y negocio.
-                </p>
-                <div class="flex flex-wrap gap-3">
-                    <a href="{{ route('productos.index') }}" class="btn-primary text-base px-8 py-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        Comprar Ahora
-                    </a>
-                    <a href="{{ route('productos.index') }}" class="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white border-2 border-white/50 rounded-lg hover:border-white hover:bg-white/10 transition">
-                        Ver Productos
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </a>
-                </div>
-
-                {{-- Trust stats --}}
-                <div class="flex gap-8 mt-10">
-                    @foreach([['15+','Años de experiencia'],['5k+','Clientes felices'],['100%','Agua certificada']] as [$n,$l])
-                    <div>
-                        <div class="text-2xl font-black text-white" style="font-family:'Poppins',sans-serif;">{{ $n }}</div>
-                        <div class="text-xs text-white/60">{{ $l }}</div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Hero visual --}}
-            <div class="hidden md:flex items-center justify-center">
-                <div class="relative w-72 h-72">
-                    <div class="w-72 h-72 rounded-full opacity-15 absolute inset-0" style="background:radial-gradient(circle,#7dd3fc,transparent);"></div>
-                    {{-- SVG bidón de agua estilizado --}}
-                    <div class="relative z-10 flex flex-col items-center justify-center h-full">
-                        <svg width="160" height="200" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-2xl">
-                            {{-- Tapa --}}
-                            <rect x="55" y="8" width="50" height="16" rx="8" fill="rgba(255,255,255,0.35)"/>
-                            {{-- Cuerpo --}}
-                            <rect x="28" y="24" width="104" height="148" rx="20" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
-                            {{-- Nivel de agua --}}
-                            <path d="M30 82 h100 v74 a14 14 0 0 1 -14 14 h-72 a14 14 0 0 1 -14 -14 z" fill="rgba(125,211,252,0.35)"/>
-                            <path d="M30 82 Q80 70 130 82" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none"/>
-                            {{-- Etiqueta --}}
-                            <rect x="44" y="44" width="72" height="50" rx="8" fill="rgba(255,255,255,0.18)"/>
-                            <rect x="52" y="52" width="56" height="5" rx="2.5" fill="rgba(255,255,255,0.6)"/>
-                            <rect x="56" y="62" width="48" height="3" rx="1.5" fill="rgba(255,255,255,0.35)"/>
-                            <rect x="56" y="70" width="36" height="3" rx="1.5" fill="rgba(255,255,255,0.35)"/>
-                            {{-- Asa --}}
-                            <path d="M28 60 Q8 60 8 90 Q8 120 28 120" stroke="rgba(255,255,255,0.4)" stroke-width="6" fill="none" stroke-linecap="round"/>
-                            {{-- Grifo --}}
-                            <rect x="116" y="148" width="20" height="10" rx="3" fill="rgba(255,255,255,0.3)"/>
-                            <rect x="130" y="152" width="12" height="5" rx="2.5" fill="rgba(255,255,255,0.4)"/>
-                        </svg>
-                        <div class="mt-1 bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3 text-white text-center">
-                            <div class="text-2xl font-black" style="font-family:'Poppins',sans-serif;">$3.990</div>
-                            <div class="text-xs text-white/70">Bidón 20L · Precio por unidad</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+@include('partials.hero')
 @endif
+
 
 {{-- ── BENEFITS BAR ─────────────────────────────────────────────────────────── --}}
 <section class="bg-white border-b border-gray-100">
