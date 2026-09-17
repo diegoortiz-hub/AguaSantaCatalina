@@ -14,6 +14,11 @@
         couponValid: false,
         nombre: '', email: '', telefono: '', direccion: '', comuna: '', ciudad: '',
         touched: false,
+
+        // Documento tributario. Boleta por omisión.
+        tipoDocumento: 'boleta',
+        rutReceptor: '', razonSocial: '', giro: '', direccionFactura: '', comunaFactura: '',
+        tocadoDocumento: false,
         init() {
             // Arrastra el cupón que el usuario ya aplicó en el carrito lateral.
             this.coupon = $store.cart.couponCode || '';
@@ -26,6 +31,18 @@
             return this.shipping === 'express' ? t.express : t.estandar;
         },
         get total() { return this.subtotal + this.shippingCost - this.couponDiscount; },
+
+        // Los precios ya vienen con IVA, así que el desglose se saca del total.
+        // El neto se redondea y el IVA es la diferencia, para que los dos
+        // sumen exactamente lo que se cobra.
+        get neto() { return Math.round(this.total / 1.19); },
+        get iva() { return this.total - this.neto; },
+
+        get camposFacturaListos() {
+            if (this.tipoDocumento !== 'factura') return true;
+            return [this.rutReceptor, this.razonSocial, this.giro, this.direccionFactura, this.comunaFactura]
+                .every(v => v.trim().length > 0);
+        },
         goStep2() {
             this.touched = true;
             if (!this.nombre.trim() || !this.email.trim() || !this.direccion.trim() || !this.comuna.trim()) return;
@@ -45,6 +62,12 @@
             this.couponDiscount = data.valido ? data.descuento : 0;
         },
         async submitOrder() {
+            this.tocadoDocumento = true;
+            if (!this.camposFacturaListos) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
             const body = {
                 session_id: $store.cart.sessionId,
                 nombre_cliente: this.nombre,
@@ -56,7 +79,16 @@
                 metodo_pago: this.payment,
                 cupon: this.coupon,
                 envio: this.shipping,
+                tipo_documento: this.tipoDocumento,
             };
+
+            if (this.tipoDocumento === 'factura') {
+                body.rut_receptor = this.rutReceptor;
+                body.razon_social = this.razonSocial;
+                body.giro = this.giro;
+                body.direccion_factura = this.direccionFactura;
+                body.comuna_factura = this.comunaFactura;
+            }
             const res = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('[name=csrf-token]').content, Accept: 'application/json' },
@@ -67,7 +99,14 @@
                 $store.cart.clear();
                 window.location = `/pedido/${order.token}/confirmacion`;
             } else {
-                alert(order.message || 'Error al procesar el pedido');
+                // Laravel devuelve los errores campo por campo; se muestran
+                // todos, porque un mensaje genérico no le sirve a nadie.
+                // Ojo: nada de comillas dobles en este atributo, ni en los
+                // comentarios, porque cierran el x-data y rompen la página.
+                const detalle = order.errors
+                    ? Object.values(order.errors).flat().join('\n')
+                    : (order.message || 'Error al procesar el pedido');
+                alert(detalle);
             }
         },
      }">
@@ -203,6 +242,70 @@
                         <span class="w-7 h-7 step-active rounded-full flex items-center justify-center text-sm">3</span>
                         Método de pago
                     </h2>
+                    {{-- ── Documento tributario ───────────────────────────────
+                         Se pregunta antes del medio de pago porque la factura
+                         pide datos y conviene que el cliente los vea antes de
+                         llegar al botón de confirmar. --}}
+                    <div class="mb-6 pb-6 border-b border-gray-100">
+                        <p class="text-sm font-bold text-gray-800 mb-1">¿Qué documento necesitas?</p>
+                        <p class="text-xs text-gray-500 mb-3">Los precios ya incluyen IVA. El documento lo recibirás por correo.</p>
+
+                        <div class="grid sm:grid-cols-2 gap-3">
+                            @foreach([
+                                ['boleta',  'Boleta',  'Para personas. No requiere datos adicionales.'],
+                                ['factura', 'Factura', 'Para empresas. Necesitamos el RUT y el giro.'],
+                            ] as [$val, $titulo, $sub])
+                            <label class="flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all"
+                                   :class="tipoDocumento === '{{ $val }}' ? 'border-[#1a56c4] bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+                                <input type="radio" name="documento" value="{{ $val }}" x-model="tipoDocumento" class="mt-0.5 text-[#1a56c4]">
+                                <span class="min-w-0">
+                                    <span class="block font-semibold text-sm text-gray-800">{{ $titulo }}</span>
+                                    <span class="block text-xs text-gray-500 leading-snug">{{ $sub }}</span>
+                                </span>
+                            </label>
+                            @endforeach
+                        </div>
+
+                        <div x-show="tipoDocumento === 'factura'" x-transition x-cloak class="mt-4 space-y-4">
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">RUT de la empresa *</label>
+                                    <input x-model="rutReceptor" type="text" placeholder="76.123.456-7" class="form-input"
+                                           :class="tocadoDocumento && !rutReceptor.trim() ? 'border-red-400' : ''">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Razón social *</label>
+                                    <input x-model="razonSocial" type="text" placeholder="Comercial Ejemplo SpA" class="form-input"
+                                           :class="tocadoDocumento && !razonSocial.trim() ? 'border-red-400' : ''">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Giro *</label>
+                                <input x-model="giro" type="text" placeholder="Venta al por menor de alimentos" class="form-input"
+                                       :class="tocadoDocumento && !giro.trim() ? 'border-red-400' : ''">
+                            </div>
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Dirección de facturación *</label>
+                                    <input x-model="direccionFactura" type="text" placeholder="Av. Apoquindo 4500, Of. 302" class="form-input"
+                                           :class="tocadoDocumento && !direccionFactura.trim() ? 'border-red-400' : ''">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Comuna *</label>
+                                    <input x-model="comunaFactura" type="text" placeholder="Las Condes" class="form-input"
+                                           :class="tocadoDocumento && !comunaFactura.trim() ? 'border-red-400' : ''">
+                                </div>
+                            </div>
+                            <p x-show="tocadoDocumento && !camposFacturaListos" x-cloak class="text-xs text-red-600">
+                                Completa todos los datos de facturación para continuar.
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                Si la dirección de facturación es distinta a la de entrega, la entrega se hace en la dirección del paso 1.
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-sm font-bold text-gray-800 mb-3">Medio de pago</p>
                     <div class="space-y-3 mb-6">
                         @foreach([
                             ['webpay',        'Webpay Plus',            'Tarjeta de débito o crédito (pago inmediato)',   'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',  '#1a56c4'],
@@ -228,12 +331,14 @@
                     {{-- Info contextual según método de pago --}}
                     <div x-show="payment === 'transferencia'" class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-[#0A3D7A] mb-5">
                         <p class="font-semibold mb-2 flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg> Datos para transferencia:</p>
+                        {{-- Antes estaba escrito a mano, y con un RUT distinto al de
+                             Configuración. Ahora sale de un solo lugar. --}}
                         <div class="space-y-0.5 text-xs text-gray-700">
-                            <p><strong>Banco:</strong> Banco de Chile</p>
-                            <p><strong>Tipo:</strong> Cuenta Corriente &nbsp;·&nbsp; <strong>N°:</strong> 00-12345-67</p>
-                            <p><strong>Titular:</strong> Aguas Santa Catalina SpA &nbsp;·&nbsp; <strong>RUT:</strong> 76.890.123-K</p>
+                            <p><strong>Banco:</strong> {{ $ajustes->get('banco') }}</p>
+                            <p><strong>Tipo:</strong> {{ $ajustes->get('tipo_cuenta') }} &nbsp;·&nbsp; <strong>N°:</strong> {{ $ajustes->get('nro_cuenta') }}</p>
+                            <p><strong>Titular:</strong> {{ $ajustes->get('titular') }} &nbsp;·&nbsp; <strong>RUT:</strong> {{ $ajustes->get('rut_titular') }}</p>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Envía el comprobante a <strong>pagos@aguassantacatalina.cl</strong> indicando tu número de pedido.</p>
+                        <p class="text-xs text-gray-500 mt-2">Envía el comprobante a <strong>{{ $ajustes->get('email_pagos') }}</strong> indicando tu número de pedido.</p>
                     </div>
 
                     <div x-show="payment === 'contra_entrega'" class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm mb-5">
@@ -296,6 +401,19 @@
             <div class="flex justify-between items-baseline pt-3">
                 <span class="font-bold text-gray-800">Total</span>
                 <span x-text="`$${total.toLocaleString('es-CL')}`" class="text-2xl font-black text-[#0A3D7A]" style="font-family:'Poppins',sans-serif;"></span>
+            </div>
+            {{-- El desglose es informativo: el total no cambia, sólo se muestra
+                 cómo se reparte, que es lo que dirá el documento. --}}
+            <div class="mt-1 space-y-0.5 text-xs text-gray-400">
+                <div class="flex justify-between">
+                    <span>Neto</span>
+                    <span x-text="`$${neto.toLocaleString('es-CL')}`"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>IVA 19%</span>
+                    <span x-text="`$${iva.toLocaleString('es-CL')}`"></span>
+                </div>
+                <p class="pt-1" x-text="tipoDocumento === 'factura' ? 'Se emitirá factura electrónica' : 'Se emitirá boleta electrónica'"></p>
             </div>
 
             {{-- Trust --}}

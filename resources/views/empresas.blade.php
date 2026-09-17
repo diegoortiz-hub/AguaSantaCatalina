@@ -94,18 +94,24 @@
             get recommendedDispensers() {
                 return Math.max(1, Math.ceil(this.employees / 15));
             },
-            get unitPriceNeto() {
+            // Los precios por tramo incluyen IVA, igual que los del catálogo.
+            // Antes se llamaban neto y se les sumaba 19% encima, con lo que la
+            // cotización por volumen quedaba por sobre el precio de la tienda:
+            // el bidón de 20L se vende a $3.990 y el tramo base cotizaba $4.272.
+            get unitPriceBruto() {
                 if (this.estimatedBottles > 30) return 2990;
                 if (this.estimatedBottles > 10) return 3290;
                 return 3590;
             },
-            get subtotalNeto() {
-                const bottles = this.estimatedBottles * this.unitPriceNeto;
+            get totalConIva() {
+                const bottles = this.estimatedBottles * this.unitPriceBruto;
                 const dispenser = this.dispenserType === 'conexion_red' ? this.recommendedDispensers * 18990 : 0;
                 return bottles + dispenser;
             },
-            get iva() { return Math.round(this.subtotalNeto * 0.19); },
-            get totalConIva() { return this.subtotalNeto + this.iva; },
+            // El neto se redondea y el IVA es la diferencia, para que los dos
+            // sumen exactamente el total cotizado.
+            get subtotalNeto() { return Math.round(this.totalConIva / 1.19); },
+            get iva() { return this.totalConIva - this.subtotalNeto; },
             get shippingProgress() {
                 return Math.min(100, Math.round((this.employees / 200) * 100));
             },
@@ -187,18 +193,19 @@
                     </div>
                 </div>
                 <div class="pt-2 border-t border-cyan-200/60 space-y-1 text-xs">
-                    <div class="flex justify-between text-slate-600">
-                        <span>Subtotal Neto Estimado:</span>
-                        <span class="font-semibold" x-text="'$' + subtotalNeto.toLocaleString('es-CL')"></span>
+                    <div class="flex justify-between text-sm font-extrabold text-slate-900">
+                        <span>Total estimado mensual:</span>
+                        <span class="text-cyan-700" x-text="'$' + totalConIva.toLocaleString('es-CL')"></span>
                     </div>
-                    <div class="flex justify-between text-slate-600">
+                    <div class="flex justify-between text-slate-500">
+                        <span>Neto:</span>
+                        <span x-text="'$' + subtotalNeto.toLocaleString('es-CL')"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-500">
                         <span>IVA (19%):</span>
                         <span x-text="'$' + iva.toLocaleString('es-CL')"></span>
                     </div>
-                    <div class="flex justify-between text-sm font-extrabold text-slate-900 pt-1 border-t border-cyan-200">
-                        <span>Total Estimado Mensual (con IVA):</span>
-                        <span class="text-cyan-700" x-text="'$' + totalConIva.toLocaleString('es-CL')"></span>
-                    </div>
+                    <p class="text-[11px] text-slate-400 pt-1">Los valores incluyen IVA. La factura detalla el neto y el impuesto por separado.</p>
                 </div>
             </div>
 

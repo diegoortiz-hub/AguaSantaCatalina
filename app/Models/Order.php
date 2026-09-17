@@ -24,7 +24,15 @@ class Order extends Model
         'ciudad',
         'estado',
         'metodo_pago',
+        'tipo_documento',
+        'rut_receptor',
+        'razon_social',
+        'giro',
+        'direccion_factura',
+        'comuna_factura',
         'subtotal',
+        'neto',
+        'iva',
         'costo_despacho',
         'descuento',
         'total',
@@ -35,6 +43,8 @@ class Order extends Model
     {
         return [
             'subtotal'       => 'decimal:2',
+            'neto'           => 'decimal:2',
+            'iva'            => 'decimal:2',
             'costo_despacho' => 'decimal:2',
             'descuento'      => 'decimal:2',
             'total'          => 'decimal:2',
@@ -60,6 +70,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function documentos(): HasMany
+    {
+        return $this->hasMany(DocumentoTributario::class);
+    }
+
     // ── Scopes ────────────────────────────────────────────────
 
     public function scopePorEstado($query, string $estado)
@@ -79,6 +94,28 @@ class Order extends Model
             'cancelado'  => 'Cancelado',
             default      => ucfirst($this->estado),
         };
+    }
+
+    public function esFactura(): bool
+    {
+        return $this->tipo_documento === 'factura';
+    }
+
+    public function documentoLabel(): string
+    {
+        return $this->esFactura() ? 'Factura electrónica' : 'Boleta electrónica';
+    }
+
+    /**
+     * El documento que vale hoy para este pedido: el último que no esté
+     * anulado. Si se anuló una boleta y se emitió otra, manda la segunda.
+     */
+    public function documentoVigente(): ?DocumentoTributario
+    {
+        return $this->documentos
+            ->reject(fn (DocumentoTributario $d) => $d->estado === 'anulado')
+            ->sortByDesc('id')
+            ->first();
     }
 
     public function metodoPagoLabel(): string

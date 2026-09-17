@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\ShopController;
 use App\Http\Controllers\Web\AdminAuthController;
 use App\Http\Controllers\Web\AdminController;
+use App\Http\Controllers\Web\DocumentoTributarioController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\AccountController;
 
@@ -92,6 +93,18 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::delete('/cupones/{coupon}',               [AdminController::class, 'cuponesDestroy'])->name('admin.cupones.destroy');
 
     // Estadísticas
+    // ── Boletas y facturas ────────────────────────────────────────────
+    // El libro va antes de /documentos/{documento} sólo por claridad: no
+    // choca, porque tiene dos segmentos y el parámetro captura uno.
+    Route::get('/documentos', [DocumentoTributarioController::class, 'index'])->name('admin.documentos.index');
+    Route::get('/documentos/libro/ventas.csv', [DocumentoTributarioController::class, 'libroVentas'])->name('admin.documentos.libro');
+    Route::post('/documentos/pedido/{order}', [DocumentoTributarioController::class, 'store'])->name('admin.documentos.store');
+    Route::get('/documentos/{documento}', [DocumentoTributarioController::class, 'show'])->name('admin.documentos.show');
+    Route::put('/documentos/{documento}', [DocumentoTributarioController::class, 'update'])->name('admin.documentos.update');
+    Route::post('/documentos/{documento}/anular', [DocumentoTributarioController::class, 'anular'])->name('admin.documentos.anular');
+    Route::post('/documentos/{documento}/reenviar', [DocumentoTributarioController::class, 'reenviar'])->name('admin.documentos.reenviar');
+    Route::get('/documentos/{documento}/pdf', [DocumentoTributarioController::class, 'descargarPdf'])->name('admin.documentos.pdf');
+
     // Reportes descargables. Va fuera de /pedidos para no chocar con
     // /pedidos/{order}, que capturaría "exportar" como si fuera un id.
     Route::get('/reportes/pedidos.csv', [AdminController::class, 'exportarPedidos'])->name('admin.reportes.pedidos');

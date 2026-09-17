@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OrderConfirmationMail;
+use App\Rules\Rut;
+use App\Services\Tributario\EmisorDocumentos;
+use App\Support\Iva;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -30,6 +33,21 @@ class OrderController extends Controller
             'notas'         => 'nullable|string|max:1000',
             'cupon'         => 'nullable|string|max:50',
             'envio'         => 'nullable|in:standard,express',
+
+            // Documento tributario. Boleta por omisión: es lo que corresponde a
+            // una persona. La factura exige los datos del receptor, y se piden
+            // todos porque un dato faltante obliga a anular y reemitir.
+            'tipo_documento'    => 'nullable|in:boleta,factura',
+            'rut_receptor'      => ['nullable', 'required_if:tipo_documento,factura', 'string', 'max:20', new Rut],
+            'razon_social'      => 'nullable|required_if:tipo_documento,factura|string|max:255',
+            'giro'              => 'nullable|required_if:tipo_documento,factura|string|max:255',
+            'direccion_factura' => 'nullable|required_if:tipo_documento,factura|string|max:500',
+            'comuna_factura'    => 'nullable|required_if:tipo_documento,factura|string|max:100',
+        ], [], [
+            'rut_receptor'      => 'RUT',
+            'razon_social'      => 'razón social',
+            'direccion_factura' => 'dirección de facturación',
+            'comuna_factura'    => 'comuna de facturación',
         ]);
 
         $cartItems = CartItem::with('product')
@@ -71,6 +89,13 @@ class OrderController extends Controller
 
             $total = $subtotal + $despacho - $descuento;
 
+            // Los precios del catálogo ya incluyen IVA, así que el neto y el
+            // IVA se desglosan del total cobrado. Se guardan en el pedido para
+            // que el documento no dependa de recalcularlos más adelante.
+            $desglose = Iva::desglosar($total);
+
+            $esFactura = ($validated['tipo_documento'] ?? 'boleta') === 'factura';
+
             $order = Order::create([
                 'user_id'        => auth()->id(),
                 'nombre_cliente' => $validated['nombre_cliente'],
@@ -81,7 +106,17 @@ class OrderController extends Controller
                 'ciudad'         => $validated['ciudad'] ?? null,
                 'metodo_pago'    => $validated['metodo_pago'],
                 'notas'          => $validated['notas'] ?? null,
+
+                'tipo_documento'    => $esFactura ? 'factura' : 'boleta',
+                'rut_receptor'      => $esFactura ? Rut::formatear($validated['rut_receptor']) : null,
+                'razon_social'      => $esFactura ? $validated['razon_social'] : null,
+                'giro'              => $esFactura ? $validated['giro'] : null,
+                'direccion_factura' => $esFactura ? $validated['direccion_factura'] : null,
+                'comuna_factura'    => $esFactura ? $validated['comuna_factura'] : null,
+
                 'subtotal'       => $subtotal,
+                'neto'           => $desglose['neto'],
+                'iva'            => $desglose['iva'],
                 'costo_despacho' => $despacho,
                 'descuento'      => $descuento,
                 'total'          => $total,
@@ -107,6 +142,16 @@ class OrderController extends Controller
 
             return $order;
         });
+
+        // El documento se registra fuera de la transacción: con un emisor que
+        // llame a una API externa, esa llamada no puede vivir dentro de una
+        // transacción abierta. Si falla, el pedido igual queda: el panel lista
+        // los pedidos sin documento para no perderlos de vista.
+        try {
+            app(EmisorDocumentos::class)->emitir($order);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         // Enviar email de confirmación (silencioso si falla)
         try {
