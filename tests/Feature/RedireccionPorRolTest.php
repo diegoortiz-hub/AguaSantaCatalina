@@ -105,4 +105,17 @@ class RedireccionPorRolTest extends TestCase
             ->assertOk()
             ->assertDontSee('Panel de administración');
     }
+    /**
+     * La barra del panel traía una tarjeta de WhatsApp con el número de la
+     * propia tienda: pulsarla abría una conversación del administrador
+     * consigo mismo. Y no existía ningún enlace de vuelta a la tienda.
+     */
+    public function test_el_panel_enlaza_a_la_tienda_y_no_al_whatsapp_de_la_propia_tienda(): void
+    {
+        $this->actingAs($this->usuario('admin'))
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee('Ver la tienda')
+            ->assertDontSee('wa.me');
+    }
 }
