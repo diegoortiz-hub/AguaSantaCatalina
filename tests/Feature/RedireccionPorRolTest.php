@@ -115,7 +115,7 @@ class RedireccionPorRolTest extends TestCase
         $this->actingAs($this->usuario('admin'))
             ->get('/admin')
             ->assertOk()
-            ->assertSee('Ver la tienda')
+            ->assertSee('Ver tienda online')
             ->assertDontSee('wa.me');
     }
 }

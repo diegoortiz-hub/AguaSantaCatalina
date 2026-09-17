@@ -92,6 +92,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::delete('/cupones/{coupon}',               [AdminController::class, 'cuponesDestroy'])->name('admin.cupones.destroy');
 
     // Estadísticas
+    // Reportes descargables. Va fuera de /pedidos para no chocar con
+    // /pedidos/{order}, que capturaría "exportar" como si fuera un id.
+    Route::get('/reportes/pedidos.csv', [AdminController::class, 'exportarPedidos'])->name('admin.reportes.pedidos');
+
     Route::get('/estadisticas',                      [AdminController::class, 'estadisticas'])->name('admin.estadisticas');
 
     // Páginas editables

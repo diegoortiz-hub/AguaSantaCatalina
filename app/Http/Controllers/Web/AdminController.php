@@ -8,18 +8,21 @@ use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\Analitica;
 use App\Support\EstadoSistema;
 use App\Support\Settings;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -54,12 +57,38 @@ class AdminController extends Controller
         $clientes_mes_ant = User::where('rol', 'cliente')
             ->whereBetween('created_at', [$inicioMesAnterior, $inicioMes])->count();
 
-        $stock_bajo = Product::whereColumn('stock', '<=', 'stock_minimo')->activo()->count();
+        $stock_bajo        = Product::whereColumn('stock', '<=', 'stock_minimo')->activo()->count();
+        $productos_activos = Product::activo()->count();
+
+        $pedidos_hoy  = Order::where('estado', '!=', 'cancelado')
+            ->whereBetween('created_at', [$inicioHoy, $inicioHoy->copy()->endOfDay()])->count();
+        $pedidos_ayer = Order::where('estado', '!=', 'cancelado')
+            ->whereBetween('created_at', [$inicioAyer, $inicioAyer->copy()->endOfDay()])->count();
+
+        // Lo que ya está confirmado y espera salir, y lo que va en la calle.
+        $por_despachar = Order::where('estado', 'confirmado')->count();
+        $pedidos_en_ruta = Order::where('estado', 'enviado')->count();
+
+        // "Unidades en tránsito" sale de los items de los pedidos enviados. Es el
+        // equivalente real de los bidones en la calle: no hay un contador de
+        // envases aparte, así que se cuenta lo que se despachó.
+        $unidades_en_ruta = (int) OrderItem::whereHas('order', fn ($q) => $q->where('estado', 'enviado'))->sum('cantidad');
 
         $var_ventas   = $ventas_ayer > 0 ? round((($ventas_hoy - $ventas_ayer) / $ventas_ayer) * 100) : 0;
         $var_clientes = $clientes_mes_ant > 0 ? round((($clientes_mes - $clientes_mes_ant) / $clientes_mes_ant) * 100) : 0;
 
-        $stats = compact('ventas_hoy','ventas_mes','ventas_ayer','pedidos_pendientes','pedidos_mes','clientes_mes','clientes_mes_ant','stock_bajo','var_ventas','var_clientes');
+        $ticket_promedio = $pedidos_mes > 0 ? $ventas_mes / $pedidos_mes : 0;
+
+        // Hora del último pedido: reemplaza al "sincronizado hace 2 min" del
+        // diseño, que no medía nada porque no hay ningún proceso que sincronizar.
+        $ultimo_pedido = Order::latest()->value('created_at');
+
+        $stats = compact(
+            'ventas_hoy','ventas_mes','ventas_ayer','pedidos_pendientes','pedidos_mes',
+            'clientes_mes','clientes_mes_ant','stock_bajo','var_ventas','var_clientes',
+            'productos_activos','pedidos_hoy','pedidos_ayer','por_despachar',
+            'pedidos_en_ruta','unidades_en_ruta','ticket_promedio','ultimo_pedido'
+        );
 
         // ── Series reales para los gráficos ──────────────────────────────
         $desde30 = now()->subDays(29)->startOfDay();
@@ -88,24 +117,35 @@ class AdminController extends Controller
             30
         );
 
-        // Serie de 12 meses. Se agrupa por día (DATE() existe en MySQL y en SQLite,
-        // a diferencia de DATE_FORMAT) y el total mensual se arma en PHP.
-        $porDia = Order::selectRaw('DATE(created_at) as fecha, SUM(total) as valor')
-            ->whereIn('estado', self::ESTADOS_VENTA)
-            ->where('created_at', '>=', now()->subMonthsNoOverflow(11)->startOfMonth())
-            ->groupBy('fecha')->pluck('valor', 'fecha');
+        // Series de 12 meses. Se agrupan por día (DATE() existe en MySQL y en
+        // SQLite, a diferencia de DATE_FORMAT) y el total mensual se arma en PHP.
+        $desde12 = now()->subMonthsNoOverflow(11)->startOfMonth();
 
-        $porMes = $porDia->reduce(function (array $acc, $valor, $fecha) {
-            $mes = substr((string) $fecha, 0, 7);
-            $acc[$mes] = ($acc[$mes] ?? 0) + (float) $valor;
+        $serieAnual = $this->rollupMensual(
+            Order::selectRaw('DATE(created_at) as fecha, SUM(total) as valor')
+                ->whereIn('estado', self::ESTADOS_VENTA)
+                ->where('created_at', '>=', $desde12)
+                ->groupBy('fecha')->pluck('valor', 'fecha')->toArray()
+        );
 
-            return $acc;
-        }, []);
+        $serieAnualPedidos = $this->rollupMensual(
+            Order::selectRaw('DATE(created_at) as fecha, COUNT(*) as valor')
+                ->where('estado', '!=', 'cancelado')
+                ->where('created_at', '>=', $desde12)
+                ->groupBy('fecha')->pluck('valor', 'fecha')->toArray()
+        );
 
-        $serieAnual = [];
+        $serieAnualClientes = $this->rollupMensual(
+            User::selectRaw('DATE(created_at) as fecha, COUNT(*) as valor')
+                ->where('rol', 'cliente')
+                ->where('created_at', '>=', $desde12)
+                ->groupBy('fecha')->pluck('valor', 'fecha')->toArray()
+        );
+
+        // Etiquetas de los 12 meses, para el eje del gráfico.
+        $etiquetasMeses = [];
         for ($i = 11; $i >= 0; $i--) {
-            $m = now()->subMonthsNoOverflow($i)->format('Y-m');
-            $serieAnual[] = (float) ($porMes[$m] ?? 0);
+            $etiquetasMeses[] = ucfirst(now()->subMonthsNoOverflow($i)->translatedFormat('M'));
         }
 
         // Distribución real de medios de pago del mes
@@ -121,8 +161,86 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact(
             'stats', 'pedidos_recientes', 'productos_stock_bajo',
-            'serieVentas', 'seriePedidos', 'serieClientes', 'serieAnual', 'mediosPago'
+            'serieVentas', 'seriePedidos', 'serieClientes',
+            'serieAnual', 'serieAnualPedidos', 'serieAnualClientes',
+            'etiquetasMeses', 'mediosPago'
         ));
+    }
+
+    /**
+     * Exportación de pedidos a CSV.
+     *
+     * El botón "Exportar Reporte" del diseño tenía que hacer algo, y esto es lo
+     * que un dueño de tienda necesita de verdad: las ventas del período en una
+     * planilla. Se transmite por filas para no cargar todo en memoria cuando la
+     * tabla crezca, y lleva BOM porque Excel en Windows abre UTF-8 sin BOM con
+     * los acentos rotos.
+     */
+    public function exportarPedidos(Request $request): StreamedResponse
+    {
+        $datos = $request->validate([
+            'desde' => ['nullable', 'date'],
+            'hasta' => ['nullable', 'date', 'after_or_equal:desde'],
+        ]);
+
+        $desde = isset($datos['desde']) ? Carbon::parse($datos['desde'])->startOfDay() : now()->startOfMonth();
+        $hasta = isset($datos['hasta']) ? Carbon::parse($datos['hasta'])->endOfDay() : now()->endOfDay();
+
+        $nombre = 'pedidos-'.$desde->format('Y-m-d').'-a-'.$hasta->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($desde, $hasta) {
+            $salida = fopen('php://output', 'w');
+
+            fwrite($salida, "\xEF\xBB\xBF");
+
+            fputcsv($salida, [
+                'Pedido', 'Fecha', 'Cliente', 'Email', 'Teléfono', 'Comuna',
+                'Estado', 'Medio de pago', 'Subtotal', 'Despacho', 'Descuento', 'Total',
+            ], ';');
+
+            Order::whereBetween('created_at', [$desde, $hasta])
+                ->orderBy('id')
+                ->chunk(500, function ($pedidos) use ($salida) {
+                    foreach ($pedidos as $pedido) {
+                        fputcsv($salida, [
+                            $pedido->id,
+                            $pedido->created_at->format('Y-m-d H:i'),
+                            $pedido->nombre_cliente,
+                            $pedido->email_cliente,
+                            $pedido->telefono,
+                            $pedido->comuna,
+                            $pedido->estado,
+                            $pedido->metodo_pago,
+                            number_format((float) $pedido->subtotal, 0, ',', ''),
+                            number_format((float) $pedido->costo_despacho, 0, ',', ''),
+                            number_format((float) $pedido->descuento, 0, ',', ''),
+                            number_format((float) $pedido->total, 0, ',', ''),
+                        ], ';');
+                    }
+                });
+
+            fclose($salida);
+        }, $nombre, [
+            'Content-Type'  => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store, no-cache',
+        ]);
+    }
+
+    /** Suma por mes una serie diaria y devuelve los 12 meses hasta hoy, sin huecos. */
+    private function rollupMensual(array $porDia): array
+    {
+        $porMes = [];
+        foreach ($porDia as $fecha => $valor) {
+            $mes = substr((string) $fecha, 0, 7);
+            $porMes[$mes] = ($porMes[$mes] ?? 0) + (float) $valor;
+        }
+
+        $serie = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $serie[] = (float) ($porMes[now()->subMonthsNoOverflow($i)->format('Y-m')] ?? 0);
+        }
+
+        return $serie;
     }
 
     /** Completa con ceros los días sin registros para que la serie no tenga huecos. */
