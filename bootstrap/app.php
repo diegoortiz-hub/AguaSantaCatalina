@@ -18,6 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\RegistrarVisita::class,
         ]);
 
+        // Detrás del túnel, cloudflared conecta desde el propio equipo, así que
+        // sólo se confía en el loopback. Con '*' cualquiera podría falsear la
+        // cabecera X-Forwarded-For y saltarse el límite de intentos del login.
+        // Sin esto, Laravel generaría enlaces http:// dentro de una página
+        // https:// y el navegador bloquearía el CSS y el JavaScript.
+        $middleware->trustProxies(at: ['127.0.0.1', '::1']);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);

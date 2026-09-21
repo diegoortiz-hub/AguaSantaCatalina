@@ -13,7 +13,10 @@ use App\Http\Controllers\Api\CouponController;
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('v1')->group(function () {
+// El límite va porque estas rutas quedan abiertas a internet cuando el
+// sitio se expone por un túnel: crean pedidos y escriben en el carrito
+// sin autenticación. 60 por minuto no estorba a nadie navegando.
+Route::middleware('throttle:60,1')->prefix('v1')->group(function () {
 
     // ── Productos ─────────────────────────────────────────────────────────
     Route::get('/products',       [ProductController::class, 'index']);
@@ -36,7 +39,7 @@ Route::prefix('v1')->group(function () {
 });
 
 // Alias sin versión para compatibilidad con el frontend
-Route::prefix('')->group(function () {
+Route::middleware('throttle:60,1')->prefix('')->group(function () {
     Route::get('/products',       [ProductController::class, 'index']);
     Route::get('/products/{slug}',[ProductController::class, 'show']);
     Route::get('/categories',     [CategoryController::class, 'index']);

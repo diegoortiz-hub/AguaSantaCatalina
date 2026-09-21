@@ -19,6 +19,11 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Fijo: sin esto el host de las peticiones de prueba sale de APP_URL
+             del .env, y apuntar el .env a un túnel o a otro puerto cambiaba el
+             resultado de las pruebas que comparan contra el host propio. -->
+        <env name="APP_URL" value="http://localhost"/>
+        <env name="ASSET_URL" value=""/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
